@@ -1,2 +1,1 @@
-# QuickPick-Releases
-For QuickPick Releases
+#quickPick

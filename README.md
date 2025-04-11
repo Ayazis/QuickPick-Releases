@@ -1,1 +1,1 @@
-# QuickPick
+# quickpick

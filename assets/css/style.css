@@ -13,13 +13,14 @@
 
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: var(--color-dark);
+    background-color: var(--color-extradark);
     color: var(--color-light);
     line-height: 1.8;
     text-rendering: optimizeLegibility;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-y: scroll;
 }
 
 
@@ -40,6 +41,13 @@ body {
     backdrop-filter: blur(10px);
     z-index: 1000;
     border-bottom: 1px solid var(--color-medium);
+    height: 70px;
+}
+
+.main-container {
+    overflow-y: auto;
+    flex: 1;
+    position: relative;
 }
 
 .nav-container {
@@ -58,8 +66,10 @@ body {
 
 .nav-links {
     display: flex;
-    gap: 2rem;
+    gap: 3rem;
     list-style: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
 .nav-links a {
@@ -138,9 +148,13 @@ body {
 
 /* Footer */
 .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
     background-color: rgba(111, 111, 111, 0.1);
-    padding: 40px 0;
-    margin-top: auto;
+    padding: 20px 0;
+    z-index: 1000;
 }
 
 .footer-content {

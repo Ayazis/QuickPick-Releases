@@ -36,7 +36,8 @@ Whether you're switching between apps, adjusting volume, or minimizing a window,
 
 ## ⚠️ Known Limitations
 * Only tested and supported on windows 11
-* Dark mode only  
+* Dark mode only
+* Unsigned library, so windows does not trust it (NOTE: To fix the 'Windows has protected your PC' warining, Right click the .exe, hit properties > security: 'unblock')
 ---
 
 ## 🚧 Roadmap

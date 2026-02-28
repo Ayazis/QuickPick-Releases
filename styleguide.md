@@ -1,10 +1,5 @@
 # QuickPick Releases Website Style Guide
 
-## Brand Overview
-QuickPick is a Windows desktop utility that brings taskbar management and automation macros directly to your cursor. The brand identity centers around **efficiency**, **modern design**, and **hexagonal geometry**.
-
----
-
 ## Design Philosophy
 - **Modern & Minimal**: Clean, dark-themed interface for focused productivity
 - **Geometric**: Hexagonal grid system as the core visual element

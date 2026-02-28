@@ -3,71 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>quickpick - Windows Application</title>
+    <title>QuickPick - Windows Action Launcher</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-    <div class="header-container">
-        <nav class="nav">
-            <div class="container nav-container">
-                <a href="index.html" class="nav-logo">quickpick</a>
-                <ul class="nav-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="download.html">Download</a></li>
-                    <li><a href="community.html">Community</a></li>
-                    <li><a href="changelog.html">Changelog</a></li>
+<body class="homepage" data-page="index">
+    <header id="topbar-root"></header>
+
+    <main class="home-main">
+        <section class="home-section home-hero" id="home">
+            <div class="container home-content">
+                <h1>Execute predefined actions instantly from your cursor.</h1>
+                <p>QuickPick is a Windows action launcher designed for speed, precision, and control.</p>
+                <a href="download.html" class="btn btn-primary">Download for Windows</a>
+                <p class="home-secondary-link"><a href="changelog.html">View Changelog</a></p>
+            </div>
+        </section>
+
+        <section class="home-section" id="what-it-is">
+            <div class="container home-content">
+                <h2>What It Is</h2>
+                <p>
+                    QuickPick allows you to define actions such as media controls, volume changes, text insertion,
+                    key combinations, or application launch. When invoked, QuickPick appears at your cursor.
+                    Select an action. Execute. Done.
+                </p>
+                <ul class="home-list">
+                    <li>Media controls</li>
+                    <li>Volume changes</li>
+                    <li>Text insertion</li>
+                    <li>Key combinations</li>
+                    <li>Application launch</li>
                 </ul>
+                <p class="home-clarification">
+                    It is not a search launcher.<br>
+                    It does not rank results.<br>
+                    It executes exactly what you define.
+                </p>
             </div>
-        </nav>
-    </div>
+        </section>
 
-    <div class="main-container">
-        <main>
-            <section class="hero">
-                <div class="container">
-                    <h1>quickpick for Windows</h1>
-                    <p>Streamline your workflow with the ultimate Windows application</p>
-                    <a href="download.html" class="btn btn-primary">Download Now</a>
-                </div>
-            </section>
-
-            <section class="section">
-                <div class="container">
-                    <h2 class="section-title">Key Features</h2>
-                    <div class="card">
-                        <h3>Feature 1</h3>
-                        <p>Description of the first key feature that makes quickpick special.</p>
-                    </div>
-                    <div class="card">
-                        <h3>Feature 2</h3>
-                        <p>Description of another important feature that users will love.</p>
-                    </div>
-                    <div class="card">
-                        <h3>Feature 3</h3>
-                        <p>Description of a third compelling feature that sets quickpick apart.</p>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <div class="footer-container">
-        <footer class="footer">
-            <div class="container footer-content">
-                <p>&copy; 2025 quickpick. All rights reserved.</p>
-                <div class="nav-links">
-                    <a href="about.html">About</a>
-                    <a href="download.html">Download</a>
-                    <a href="community.html">Community</a>
-                    <a href="changelog.html">Changelog</a>
-                </div>
+        <section class="home-section" id="summon-ui">
+            <div class="container home-content">
+                <h2>Summon Interface</h2>
+                <figure class="home-figure">
+                    <div class="home-screenshot" role="img" aria-label="Placeholder for summon UI screenshot">&lt;screenshot of summon UI&gt;</div>
+                    <figcaption>Appears at the cursor. Select. Execute.</figcaption>
+                </figure>
             </div>
-        </footer>
-    </div>
-  <script src="assets/js/hexagon.js"></script>
+        </section>
+
+        <section class="home-section" id="why-hexagons">
+            <div class="container home-content">
+                <h2>Why Hexagons</h2>
+                <p>
+                    QuickPick uses a hexagonal layout for action selection. The structure ensures equal distance
+                    between targets and eliminates directional bias. The layout is designed for repeated spatial use
+                    and muscle memory.
+                </p>
+                <p class="home-clarification">
+                    Hexagons represent actions.<br>
+                    Circles represent applications.
+                </p>
+            </div>
+        </section>
+
+        <section class="home-section" id="configuration">
+            <div class="container home-content">
+                <h2>Configuration</h2>
+                <figure class="home-figure">
+                    <div class="home-screenshot" role="img" aria-label="Placeholder for configuration screen screenshot">&lt;screenshot of configuration screen&gt;</div>
+                    <figcaption>Define actions once. Reuse them instantly.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="home-section" id="technical-characteristics">
+            <div class="container home-content">
+                <h2>Technical Characteristics</h2>
+                <ul class="home-list">
+                    <li>Windows only</li>
+                    <li>Local configuration</li>
+                    <li>No cloud dependency</li>
+                    <li>No background telemetry</li>
+                    <li>Deterministic behavior</li>
+                </ul>
+                <p>QuickPick performs only the actions you explicitly configure.</p>
+            </div>
+        </section>
+    </main>
+    <script src="assets/js/topbar.js" defer></script>
 </body>
 </html>

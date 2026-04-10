@@ -3,443 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>QuickPick — Your apps, at your cursor</title>
+  <title>QuickPick — Your commands, at your cursor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0c0c0e;
-      --bg-card: #141416;
-      --border: #3e3e3e;
-      --text: #f7f7f7;
-      --text-white: #fff;
-      --muted: #888888;
-      --accent-1: #0f7d80;
-      --accent-2: #0b5c5e;
-      --accent-3: #149ea3;
-      --radius: 16px;
-
-      /* Derived / alpha variants */
-      --bg-nav:rgba(12,12,14,0.75);
-      --accent-glow: rgba(15, 125, 128, 0.18);
-      --accent-soft: rgba(15, 125, 128, 0.15);
-      --accent-border: rgba(15, 125, 128, 0.35);
-      --accent-hover-border: rgba(15, 125, 128, 0.4);
-      --accent-icon-border: rgba(15, 125, 128, 0.25);
-      --accent-subtle: rgba(15, 125, 128, 0.06);
-      --accent-2-soft: rgba(11, 92, 94, 0.15);
-      --overlay-light: rgba(255, 255, 255, 0.06);
-      --overlay-light-hover: rgba(255, 255, 255, 0.10);
-      --overlay-faint: rgba(255, 255, 255, 0.04);
-      --shadow-heavy: rgba(0, 0, 0, 0.6);
-      --discord: #5865F2;
-      --warning-bg: rgba(234, 179, 8, 0.08);
-      --warning-border: rgba(234, 179, 8, 0.2);
-      --warning-text: #ca8a04;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      height: 64px;
-      background: var(--bg-nav);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-logo {
-      font-size: 1rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    .nav-cta {
-      background: var(--accent-1);
-      color: var(--text-white) !important;
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-weight: 600 !important;
-    }
-    .nav-cta:hover { opacity: 0.85; }
-
-    /* ── HERO ── */
-    .hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 160px 24px 100px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Radial glow behind hero */
-    .hero::before {
-      content: '';
-      position: absolute;
-      top: -100px; left: 50%;
-      transform: translateX(-50%);
-      width: 900px; height: 600px;
-      background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      color: var(--accent-3);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      padding: 6px 14px;
-      border-radius: 100px;
-      margin-bottom: 28px;
-    }
-
-    .hero-badge span { opacity: 0.7; }
-
-    h1 {
-      font-size: clamp(2.8rem, 7vw, 5.5rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 1.05;
-      max-width: 900px;
-      margin-bottom: 24px;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-sub {
-      font-size: 1.15rem;
-      color: var(--muted);
-      max-width: 560px;
-      line-height: 1.7;
-      margin-bottom: 40px;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .btn-primary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.15s, opacity 0.15s;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-      color: var(--text-white);
-      border: none;
-    }
-    .btn-primary:hover { transform: translateY(-2px); opacity: 0.92; }
-
-    .btn-secondary {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      transition: transform 0.15s, background 0.2s;
-      background: var(--overlay-light);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover { background: var(--overlay-light-hover); transform: translateY(-2px); }
-
-    /* ── DEMO ── */
-    .demo {
-      padding: 0 24px 100px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .demo-frame {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      box-shadow: 0 0 0 1px var(--overlay-faint), 0 40px 80px var(--shadow-heavy), 0 0 60px var(--accent-soft);
-      max-width: 860px;
-      width: 100%;
-    }
-
-    .demo-frame img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    /* ── SECTION LABEL ── */
-    .section-label {
-      text-align: center;
-      margin-bottom: 64px;
-    }
-
-    .section-label h2 {
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-bottom: 12px;
-    }
-
-    .section-label p {
-      color: var(--muted);
-      font-size: 1.05rem;
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
-    /* ── FEATURES ── */
-    .features {
-      padding: 100px 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-    }
-
-    .feature-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 32px;
-      transition: border-color 0.2s, transform 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .feature-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-hover-border), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .feature-card:hover { border-color: var(--accent-hover-border); transform: translateY(-4px); }
-    .feature-card:hover::before { opacity: 1; }
-
-    .feature-icon {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 20px;
-      background: linear-gradient(135deg, var(--accent-soft), var(--accent-2-soft));
-      border: 1px solid var(--accent-icon-border);
-    }
-
-    .feature-card h3 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      margin-bottom: 10px;
-      letter-spacing: -0.01em;
-    }
-
-    .feature-card p {
-      font-size: 0.9rem;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    /* ── REQUIREMENTS ── */
-    .requirements {
-      padding: 100px 24px;
-      background: linear-gradient(to bottom, transparent, var(--accent-subtle), transparent);
-    }
-
-    .requirements-inner {
-      max-width: 720px;
-      margin: 0 auto;
-    }
-
-    .req-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 40px;
-    }
-
-    .req-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 24px;
-      font-size: 0.95rem;
-    }
-
-    .req-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-      flex-shrink: 0;
-    }
-
-    /* ── DISCORD CTA ── */
-    .cta {
-      padding: 100px 24px;
-      text-align: center;
-    }
-
-    .cta-card {
-      max-width: 700px;
-      margin: 0 auto;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 64px 48px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-card::before {
-      content: '';
-      position: absolute;
-      top: -120px; left: 50%;
-      transform: translateX(-50%);
-      width: 500px; height: 300px;
-      background: radial-gradient(ellipse, var(--accent-soft) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-card h2 {
-      font-size: clamp(1.5rem, 3.5vw, 2.2rem);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      margin-bottom: 16px;
-    }
-
-    .cta-card p {
-      color: var(--muted);
-      font-size: 1rem;
-      margin-bottom: 36px;
-      line-height: 1.7;
-    }
-
-    .btn-discord {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      text-decoration: none;
-      background: var(--discord);
-      color: var(--text-white);
-      transition: opacity 0.15s, transform 0.15s;
-    }
-    .btn-discord:hover { opacity: 0.9; transform: translateY(-2px); }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 40px 24px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--text); }
-
-    /* ── NOTICE ── */
-    .notice {
-      max-width: 700px;
-      margin: 0 auto 40px;
-      background: var(--warning-bg);
-      border: 1px solid var(--warning-border);
-      border-radius: 12px;
-      padding: 16px 22px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      font-size: 0.875rem;
-      color: var(--warning-text);
-      line-height: 1.6;
-      text-align: left;
-    }
-
-    .notice-icon { flex-shrink: 0; margin-top: 1px; }
-
-    @media (max-width: 640px) {
-      nav { padding: 0 20px; }
-      .nav-links { gap: 16px; }
-      .cta-card { padding: 40px 24px; }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
 
@@ -447,64 +15,58 @@
   <nav>
     <div class="nav-logo">QuickPick</div>
     <ul class="nav-links">
+      <li><a href="#hero">Home</a></li>
       <li><a href="#features">Features</a></li>
       <li><a href="#requirements">Requirements</a></li>
-      <li><a href="https://discord.com/invite/y3KT2B72" target="_blank" rel="noopener">Discord</a></li>
+      <li><a href="#discord">Discord</a></li>
       <li><a href="https://github.com/Ayazis/QuickPick-Releases/releases/latest" class="nav-cta" target="_blank" rel="noopener">Download</a></li>
     </ul>
   </nav>
 
   <!-- HERO -->
-  <section class="hero">
-    <div class="hero-badge"><span>✦</span> Windows 11 · Free</div>
-    <h1>Your apps,<br /><span class="gradient-text">right at your cursor.</span></h1>
+  <section class="hero" id="hero">    
+    <h1>Your commands,<br /><span class="gradient-text">right at your cursor.</span></h1>
     <p class="hero-sub">
       Trigger QuickPick with any shortcut and instantly switch apps, adjust volume,
-      control media, or minimize windows — without ever leaving your flow.
+      control media, run your custom scripts - without ever leaving your flow.
     </p>
     <div class="hero-actions">
       <a href="https://github.com/Ayazis/QuickPick-Releases/releases/latest" class="btn-primary" target="_blank" rel="noopener">
         ⬇ Download for Windows
-      </a>
-      <a href="https://github.com/Ayazis/QuickPick-Releases" class="btn-secondary" target="_blank" rel="noopener">
-        View on GitHub
-      </a>
+      </a>      
+    </div>
+    <div class="hero-visual">
+      <img src="assets/images/quickpick%20stylized%20impression.png" alt="QuickPick — stylized hexagonal app launcher" />
     </div>
   </section>
 
-  <!-- DEMO GIF -->
-  <div class="demo">
-    <div class="demo-frame">
-      <img src="assets/quickpick_demo.gif" alt="QuickPick in action — pop-up app switcher at cursor" />
-    </div>
-  </div>
-
   <!-- FEATURES -->
-  <section class="features" id="features">
-    <div class="section-label">
-      <h2>Everything you need,<br /><span class="gradient-text">nothing you don't.</span></h2>
-      <p>A focused set of features designed to keep your hands on the keyboard and your mind on the work.</p>
-    </div>
+  <section class="features" id="features">    
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">⚡</div>
         <h3>Pop-up UI at your cursor</h3>
-        <p>Trigger QuickPick with a custom key or mouse combo and it appears exactly where your cursor is — no hunting for a taskbar.</p>
+        <p>Trigger QuickPick with a custom key or mouse combo and it appears exactly where your cursor is. Quick. Efficient. Seamless.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🪟</div>
         <h3>App thumbnails & fast switching</h3>
-        <p>See live thumbnails of every open window, peek inside, and jump to any app instantly — like a supercharged Alt+Tab.</p>
+        <p>See live thumbnails of every open window, peek inside, and jump to any app instantly.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🎛️</div>
         <h3>Built-in system controls</h3>
-        <p>Adjust brightness, control volume, skip tracks, or minimize your current window — all without leaving your keyboard.</p>
+        <p>Adjust monitor brightness, control volume, skip tracks, or minimize your current window — all without leaving your keyboard.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🖥️</div>
         <h3>Remote Desktop compatible</h3>
-        <p>QuickPick keeps working on your local machine even when you're inside a full-screen RDP session. No more getting trapped.</p>
+        <p>Keep control of your local client, while immersed in a full-screen RDP session.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔧</div>
+        <h3>Custom commands</h3>
+        <p>Chain multiple steps into a single command — launch apps, run scripts, open files, or trigger shortcuts — and execute it all with one click.</p>
       </div>
     </div>
   </section>
@@ -534,7 +96,7 @@
   </section>
 
   <!-- DISCORD CTA -->
-  <section class="cta">
+  <section class="cta" id="discord">
     <div class="cta-card">
       <h2>Join the community</h2>
       <p>Found a bug? Have a feature idea? Want to hang out with other QuickPick users?<br />Come say hello on Discord.</p>

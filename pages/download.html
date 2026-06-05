@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickPick Downloads</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body class="download-page">
+
+  <nav>
+    <div class="nav-logo">QuickPick</div>
+    <ul class="nav-links">
+      <li><a href="../index.html#hero">Home</a></li>
+      <li><a href="../index.html#features">Features</a></li>
+      <li><a href="../index.html#discord">Discord</a></li>
+      <li><a href="https://github.com/Ayazis/QuickPick-Releases" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+
+  <main class="download-page-main">
+    <h1 class="download-page-title">Download QuickPick</h1>
+    <p class="download-page-subtitle">Go on, put your apps and actions within reach.</p>
+    <div class="download-grid">
+      <article class="download-card" data-channel="stable">
+        <div class="download-card-header">          
+          <span class="download-pill">Stable</span>
+        </div>
+        <p class="download-version" data-field="version">Loading...</p>
+        <p class="download-meta" data-field="published">Checking latest stable release...</p>
+        <p class="download-description">
+          The newest production-ready build for everyday use.
+        </p>
+        <p class="download-status" data-field="status"></p>
+        <div class="download-actions">
+          <a class="btn-primary" data-field="download-link" href="#" aria-disabled="true">Preparing download</a>
+          <a class="btn-secondary" data-field="release-link" href="#" aria-disabled="true">View release</a>
+        </div>
+      </article>
+
+      <article class="download-card download-card-preview" data-channel="prerelease">
+        <div class="download-card-header">
+          
+          <span class="download-pill">Alpha</span>
+        </div>
+        <p class="download-version" data-field="version">Loading...</p>
+        <p class="download-meta" data-field="published">Checking latest -alpha release...</p>
+        <p class="download-description">
+          Try the latest -alpha build before features land in stable.
+        </p>
+        <p class="download-status" data-field="status"></p>
+        <div class="download-actions">
+          <a class="btn-primary" data-field="download-link" href="#" aria-disabled="true">Preparing download</a>
+          <a class="btn-secondary" data-field="release-link" href="#" aria-disabled="true">View release</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="notice download-note">
+      <span class="notice-icon">⚠️</span>
+      <span>
+        <strong>First-run warning:</strong> Because QuickPick is not code-signed yet, Windows may show a "Windows has protected your PC" message.
+        To bypass it, right-click the <code>.exe</code>, open <strong>Properties</strong>, and check <strong>Unblock</strong> in the Security section.
+      </span>
+      <img class="download-note-image" src="../assets/images/Unblock.jpg" alt="Windows file properties dialog with the Unblock checkbox highlighted" />
+    </div>
+  </main>
+
+  <footer>
+    <p>QuickPick &copy; 2026 · Built for Windows 11 · <a href="https://github.com/Ayazis/QuickPick-Releases" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+
+  <script src="../assets/js/downloads.js"></script>
+</body>
+</html>

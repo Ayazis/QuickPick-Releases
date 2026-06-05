@@ -23,52 +23,125 @@
   </nav>
 
   <!-- HERO -->
-  <section class="hero" id="hero">    
+  <section class="hero hero-carousel" id="hero" data-hero-carousel>
     <h1>Your commands,<br /><span class="gradient-text">right at your cursor.</span></h1>
     <p class="hero-sub">
       QuickPick brings apps, shortcuts, and custom actions to the point of action,
       so you can stay in flow instead of crossing screens.
     </p>
-    <div class="hero-actions">
-      <a href="pages/download.html" class="btn-primary">
-        ⬇ Download for Windows 11
-      </a>      
-    </div>
-    <div class="hero-visual">
-      <img src="assets/images/quickpick%20stylized%20impression.png" alt="QuickPick — stylized hexagonal app launcher" />
-    </div>
-  </section>
+    <div class="hero-carousel-shell">
+      <div class="hero-carousel-view">
+        <article class="hero-slide is-active" data-hero-slide>
+          <div class="hero-copy">            
+            <h1>Cursor-First Launcher</h1>
+            <p class="hero-sub">Bring your workflow closer</p>
+            <p class="hero-support">
+              QuickPick opens exactly where you are already working, so the cursor only travels a short distance before the next action is done.
+            </p>
+            <div class="hero-meta">Placeholder clip · 4-6 seconds</div>
+            <div class="hero-actions">
+              <a href="pages/download.html" class="btn-primary">
+                ⬇ Download for Windows 11
+              </a>
+            </div>
+          </div>
+          <div class="hero-demo hero-demo-launcher" aria-label="Cursor-first launcher placeholder">
+            <div class="demo-chip">Demo placeholder</div>
+            <div class="demo-window demo-window-primary"></div>
+            <div class="demo-window demo-window-secondary"></div>
+            <div class="demo-window demo-window-tertiary"></div>
+            <div class="demo-cursor demo-cursor-center"></div>
+            <div class="demo-hex-cluster">
+              <span class="demo-hex demo-hex-core"></span>
+              <span class="demo-hex demo-hex-top"></span>
+              <span class="demo-hex demo-hex-top-right"></span>
+              <span class="demo-hex demo-hex-bottom-right"></span>
+              <span class="demo-hex demo-hex-bottom"></span>
+              <span class="demo-hex demo-hex-bottom-left"></span>
+              <span class="demo-hex demo-hex-top-left"></span>
+            </div>
+            <div class="demo-caption">Bring your workflow closer</div>
+          </div>
+        </article>
 
-  <!-- FEATURES -->
-  <section class="features" id="features">    
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>Pop-up UI at your cursor</h3>
-        <p>Trigger QuickPick with a custom key or mouse combo and it appears exactly where your cursor is. Quick. Efficient. Seamless.</p>
+        <article class="hero-slide" data-hero-slide>
+          <div class="hero-copy">            
+            <h1>Fast Access to Your Essentials</h1>
+            <p class="hero-sub">Your tools, one move away</p>
+            <p class="hero-support">
+              The hex grid stays compact and close, letting pinned apps and shortcuts feel instant instead of buried behind task switching.
+            </p>
+            <div class="hero-meta">Placeholder clip · 5-7 seconds</div>
+            <div class="hero-actions">
+              <a href="pages/download.html" class="btn-primary">
+                ⬇ Download for Windows 11
+              </a>
+            </div>
+          </div>
+          <div class="hero-demo hero-demo-essentials" aria-label="Essentials grid placeholder">
+            <div class="demo-chip">Demo placeholder</div>
+            <div class="demo-cursor demo-cursor-glide"></div>
+            <div class="demo-grid-panel">
+              <span class="demo-grid-item is-highlighted"></span>
+              <span class="demo-grid-item"></span>
+              <span class="demo-grid-item is-highlighted-soft"></span>
+              <span class="demo-grid-item"></span>
+              <span class="demo-grid-item"></span>
+              <span class="demo-grid-item is-highlighted"></span>
+              <span class="demo-grid-item"></span>
+            </div>
+            <div class="demo-caption">Your tools, one move away</div>
+          </div>
+        </article>
+
+        <article class="hero-slide" data-hero-slide>
+          <div class="hero-copy">            
+            <h1>Trigger Repetitive Work Instantly</h1>
+            <p class="hero-sub">Run actions in one click</p>
+            <p class="hero-support">
+              A single custom action can replace repeated manual steps, whether that means appstart, custom text, or a small workflow that should just happen.
+            </p>
+            <div class="hero-meta">Placeholder clip · custom action demo</div>
+            <div class="hero-actions">
+              <a href="pages/download.html" class="btn-primary">
+                ⬇ Download for Windows 11
+              </a>
+            </div>
+          </div>
+          <div class="hero-demo hero-demo-actions" aria-label="Custom action placeholder">
+            <div class="demo-chip">Demo placeholder</div>
+            <div class="demo-action-panel">
+              <div class="demo-action-icon"></div>
+              <div class="demo-action-lines">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="demo-result-panel">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="demo-cursor demo-cursor-action"></div>
+            <div class="demo-caption">Run actions in one click</div>
+          </div>
+        </article>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🪟</div>
-        <h3>App thumbnails & fast switching</h3>
-        <p>See live thumbnails of every open window, peek inside, and jump to any app instantly.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎛️</div>
-        <h3>Built-in system controls</h3>
-        <p>Adjust monitor brightness, control volume, skip tracks, or minimize your current window — all without leaving your keyboard.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🖥️</div>
-        <h3>Remote Desktop compatible</h3>
-        <p>Keep control of your local client, while immersed in a full-screen RDP session.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔧</div>
-        <h3>Custom commands</h3>
-          <p>Create your own commands for things like custom text, appstart actions, scripts, files, or shortcuts, then launch them instantly from the QuickPick menu.</p>
+
+      <div class="hero-carousel-footer">
+        <div class="hero-carousel-indicators" aria-label="Hero slides">
+          <button type="button" class="hero-indicator is-active" data-hero-indicator aria-label="Show slide 1" aria-pressed="true"></button>
+          <button type="button" class="hero-indicator" data-hero-indicator aria-label="Show slide 2" aria-pressed="false"></button>
+          <button type="button" class="hero-indicator" data-hero-indicator aria-label="Show slide 3" aria-pressed="false"></button>
+        </div>
+        <div class="hero-carousel-controls">
+          <button type="button" class="hero-nav-button" data-hero-prev aria-label="Previous hero">&#8592;</button>
+          <button type="button" class="hero-nav-button hero-nav-button-next" data-hero-next aria-label="Next hero">&#8594;</button>
+        </div>
       </div>
     </div>
-  </section>
+  </section> 
 
   <!-- DISCORD CTA -->
   <section class="cta" id="discord">
@@ -89,5 +162,6 @@
     <p>QuickPick &copy; 2026 · Built for Windows 11 · <a href="https://github.com/Ayazis/QuickPick-Releases" target="_blank" rel="noopener">GitHub</a></p>
   </footer>
 
+  <script src="assets/js/home-hero-slider.js"></script>
 </body>
 </html>

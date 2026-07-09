@@ -33,45 +33,48 @@
 
   <!-- FEATURES -->
   <section class="features" id="features">
-    <div class="section-label">
-      <h2>Everything you need,<br /><span class="gradient-text">nothing you don't.</span></h2>
-      <p>A focused set of features designed to keep your hands on the keyboard and your mind on the work.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-card-image">
-          <img src="assets/images/AppSwitching.jpg" alt="QuickPick hex menu with a live preview of open windows" />
+    <div class="features-carousel" data-features-carousel>
+      <div class="features-carousel-view">
+        <div class="feature-card is-active" data-features-slide>
+          <div class="feature-card-image">
+            <img src="assets/images/AppSwitching.jpg" alt="QuickPick hex menu with a live preview of open windows" />
+          </div>
+          <h3>App thumbnails & fast switching</h3>
+          <p>Peek at live previews of your open windows right from the hex menu and jump straight to the one you need — no blind alt-tabbing.</p>
         </div>
-        <h3>App thumbnails & fast switching</h3>
-        <p>Peek at live previews of your open windows right from the hex menu and jump straight to the one you need — no blind alt-tabbing.</p>
+        <div class="feature-card" data-features-slide>
+          <div class="feature-card-image">
+            <img src="assets/images/dimmer.jpg" alt="QuickPick hex menu with the brightness control highlighted" />
+          </div>
+          <h3>Built-in system controls</h3>
+          <p>Adjust brightness, volume, and media playback right from the same menu — no extra hotkeys or tray icons to hunt for.</p>
+        </div>
+        <div class="feature-card" data-features-slide>
+          <div class="feature-card-image">
+            <img src="assets/images/customisation.jpg" alt="QuickPick hex menu with the customization action selected" />
+          </div>
+          <h3>Customize every action</h3>
+          <p>Pin the apps, shortcuts, and tools you use most, and shape the grid around how you actually work.</p>
+        </div>
+        <div class="feature-card" data-features-slide>
+          <div class="feature-card-image">
+            <img src="assets/images/RDP.jpg" alt="QuickPick hex menu running consistently on both sides of a Remote Desktop session" />
+          </div>
+          <h3>Remote Desktop compatible</h3>
+          <p>QuickPick keeps responding to your local machine's shortcuts even inside a full-screen RDP session, so you're never trapped in someone else's desktop.</p>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-image">
-          <img src="assets/images/dimmer.jpg" alt="QuickPick hex menu with the brightness control highlighted" />
+      <div class="features-carousel-footer">
+        <div class="features-carousel-indicators">
+          <button class="features-indicator is-active" data-features-indicator aria-label="Show feature 1" aria-pressed="true"></button>
+          <button class="features-indicator" data-features-indicator aria-label="Show feature 2" aria-pressed="false"></button>
+          <button class="features-indicator" data-features-indicator aria-label="Show feature 3" aria-pressed="false"></button>
+          <button class="features-indicator" data-features-indicator aria-label="Show feature 4" aria-pressed="false"></button>
         </div>
-        <h3>Built-in system controls</h3>
-        <p>Adjust brightness, volume, and media playback right from the same menu — no extra hotkeys or tray icons to hunt for.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-card-image">
-          <img src="assets/images/customisation.jpg" alt="QuickPick hex menu with the customization action selected" />
+        <div class="features-carousel-controls">
+          <button class="hero-nav-button" data-features-prev aria-label="Previous feature">‹</button>
+          <button class="hero-nav-button" data-features-next aria-label="Next feature">›</button>
         </div>
-        <h3>Customize every action</h3>
-        <p>Pin the apps, shortcuts, and tools you use most, and shape the grid around how you actually work.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-card-image">
-          <img src="assets/images/RDP.jpg" alt="QuickPick hex menu running consistently on both sides of a Remote Desktop session" />
-        </div>
-        <h3>Remote Desktop compatible</h3>
-        <p>QuickPick keeps responding to your local machine's shortcuts even inside a full-screen RDP session, so you're never trapped in someone else's desktop.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-card-image">
-          <img src="assets/images/Unblock.jpg" alt="Windows file properties dialog with the Unblock checkbox checked" />
-        </div>
-        <h3>One-click first-run bypass</h3>
-        <p>QuickPick isn't code-signed yet, so Windows may flag it on first run — just check "Unblock" in the file's Properties and you're good to go.</p>
       </div>
     </div>
   </section>
@@ -96,5 +99,6 @@
   </footer>
 
   <script src="assets/js/home-hero-slider.js"></script>
+  <script src="assets/js/features-carousel.js"></script>
 </body>
 </html>

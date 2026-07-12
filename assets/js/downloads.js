@@ -1,7 +1,5 @@
-const releasesApiUrl = 'https://api.github.com/repos/Ayazis/QuickPick-Releases/releases?per_page=20';
 const preferredAssetExtensions = ['.exe', '.msixbundle', '.msi', '.zip', '.7z'];
 const channelLabels = {
-  stable: 'stable',
   prerelease: '-alpha'
 };
 
@@ -73,14 +71,12 @@ function updateCard(channel, release) {
   const published = card.querySelector('[data-field="published"]');
   const status = card.querySelector('[data-field="status"]');
   const downloadLink = card.querySelector('[data-field="download-link"]');
-  const releaseLink = card.querySelector('[data-field="release-link"]');
 
   if (!release) {
     version.textContent = 'Unavailable';
     published.textContent = `No ${channelLabels[channel] || channel} release found.`;
     status.textContent = 'Nothing to download yet for this channel.';
     setLinkState(downloadLink, { label: 'No download available', disabled: true });
-    setLinkState(releaseLink, { label: 'Release unavailable', disabled: true });
     return;
   }
 
@@ -96,16 +92,10 @@ function updateCard(channel, release) {
     label: asset ? 'Download now' : 'Open release notes',
     disabled: false
   });
-
-  setLinkState(releaseLink, {
-    href: release.html_url,
-    label: 'View release',
-    disabled: false
-  });
 }
 
 function setErrorState(message) {
-  for (const channel of ['stable', 'prerelease']) {
+  for (const channel of ['prerelease']) {
     const card = document.querySelector(`[data-channel="${channel}"]`);
     if (!card) {
       continue;
@@ -121,28 +111,12 @@ function setErrorState(message) {
       label: 'Retry later',
       disabled: true
     });
-    setLinkState(card.querySelector('[data-field="release-link"]'), {
-      href: 'https://github.com/Ayazis/QuickPick-Releases/releases',
-      label: 'Open releases',
-      disabled: false
-    });
   }
 }
 
 async function loadReleases() {
   try {
-    const response = await fetch(releasesApiUrl, {
-      headers: {
-        Accept: 'application/vnd.github+json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`GitHub API returned ${response.status}`);
-    }
-
-    const releases = await response.json();
-    updateCard('stable', findRelease('stable', releases));
+    const releases = await window.QuickPickReleases.fetchReleases();
     updateCard('prerelease', findRelease('prerelease', releases));
   } catch (error) {
     setErrorState('GitHub release data is temporarily unavailable.');

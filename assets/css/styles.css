@@ -98,32 +98,8 @@ nav {
 }
 .nav-cta:hover { opacity: 0.85; }
 
-/* ── TITLE SECTION ANIMATION ── */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .title-line-1 {
   display: inline-block;
-  opacity: 0;
-  animation: fadeInUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
-}
-
-.title-line-2 {
-  opacity: 0;
-  animation: fadeInUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) .8s forwards;
-}
-
-.title-sub {
-  opacity: 0;
-  animation: fadeInUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 2.0s forwards;
 }
 
 /* ── TITLE SECTION ── */
@@ -138,11 +114,9 @@ nav {
 }
 
 .hero-download-cta {
-  opacity: 0;
   font-size: 1rem;
   padding: 12px 28px;
   margin-bottom: 32px;
-  animation: fadeInUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.4s forwards;
 }
 
 .title-section::before {
@@ -210,7 +184,7 @@ h1 {
 
 .hero > .hero-sub,
 .title-section .hero-sub {
-  max-width: 600px;
+  max-width: 720px;
 }
 
 .hero-support {

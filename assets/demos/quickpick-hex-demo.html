@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickPick — hex menu demo (basic functionality)</title>
+<!-- QuickPick hex-menu landing-page demo: basic functionality
+     (volume, playback, brightness). Built on the shared qp-core engine —
+     see qp-core.js/qp-core.css/qp-icons.js. To embed, copy this file's
+     .qp-demo block together with those shared files. -->
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0b0d; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+</style>
+<link rel="stylesheet" href="qp-core.css">
+</head>
+<body>
+
+<div class="qp-demo" id="qpDemo"></div>
+
+<script src="qp-icons.js" defer></script>
+<script src="qp-core.js" defer></script>
+<script defer>
+document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  "use strict";
+
+  var bindings = ["tools", "minimize", "forward", "play", "backward", "volume", "adjust"];
+
+  var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
+    bindings: bindings,
+    icons: QpIcons,
+    stageWidth: 380,  // matches the app-switch demo's canvas so both carousel slides are the same size
+    stageHeight: 370
+  });
+
+  var summonX = 190, summonY = 105; // default summon point (used by reduced-motion fallback) — matches the app-switch demo's summon point
+  var entryX = 45, entryY = 330;    // where the cursor wanders in from, and returns to on exit — matches the app-switch demo
+
+  // Drag a hex's value gauge along a path of percentages (e.g. [40,78] for a
+  // one-way drag, or [72,30,72] for a drag-down-then-back-up), nudging the
+  // cursor up/down alongside it. onFrame(pct), if given, fires on every
+  // eased step so callers can sync other effects (e.g. screen brightness)
+  // with the drag — including its reverse leg. Shared by the volume and
+  // brightness steps.
+  async function dragGauge(q, hexIndex, path, onFrame) {
+    var center = q.hex.center(hexIndex);
+    await q.cursor.move(center.x, center.y, 350);
+    q.hex.hover(hexIndex, true);
+    await QuickPickHex.sleep(220);
+    await q.cursor.click();
+
+    var dragSteps = 16;
+    q.hex.setGauge(hexIndex, path[0]);
+    if (onFrame) onFrame(path[0]);
+    for (var seg = 0; seg < path.length - 1; seg++) {
+      var startPct = path[seg], endPct = path[seg + 1];
+      for (var s = 1; s <= dragSteps; s++) {
+        var t = s / dragSteps;
+        var e = 1 - Math.pow(1 - t, 2); // ease-out
+        var pct = startPct + (endPct - startPct) * e;
+        q.hex.setGauge(hexIndex, Math.round(pct));
+        if (onFrame) onFrame(pct);
+        q.cursor.moveInstant(center.x, center.y - 26 * (endPct > startPct ? e : -e));
+        await QuickPickHex.sleep(25);
+      }
+      await QuickPickHex.sleep(150);
+    }
+    q.hex.clearGauge(hexIndex); // release
+    await QuickPickHex.sleep(120);
+    q.hex.hover(hexIndex, false);
+  }
+
+  var steps = [
+    // reset state at the top of every loop
+    { fn: async function (q) {
+        q.win.classList.remove("shown", "hiding");
+        for (var i = 0; i < bindings.length; i++) { q.hex.hover(i, false); q.hex.clearGauge(i); }
+        q.hex.setIcon(3, "play");
+        q.root.style.transition = "";
+        q.root.style.filter = "";
+      } },
+
+    // 1. cursor wanders in
+    { fn: async function (q) { q.cursor.place(entryX, entryY); await QuickPickHex.sleep(300); } },
+    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 550 },
+    { sleep: 150 },
+
+    // 2. hotkey press → summon at cursor
+    { fn: async function (q) {
+        summonX = q.cursor.x + 8; summonY = q.cursor.y + 10;
+        await q.hotkey.press();
+        q.window.show(summonX, summonY);
+      } },
+    { sleep: 550 },
+
+    // 3. hover volume hex, drag up → cyan gauge fills
+    { fn: async function (q) { await dragGauge(q, 5, [40, 78]); } },
+
+    // 4. hover brightness hex, drag down then back up → the whole scene
+    //    dims and un-dims in lockstep with the reversing gauge/cursor
+    { fn: async function (q) {
+        await dragGauge(q, 6, [100, 30, 100], function (pct) {
+          q.root.style.filter = "brightness(" + (pct / 100).toFixed(2) + ")";
+        });
+        q.root.style.filter = ""; // fully normal once the interaction ends
+      } },
+
+    // 5. click play/pause → icon toggles
+    { fn: async function (q) {
+        var pp = q.hex.center(3);
+        await q.cursor.move(pp.x, pp.y, 320);
+        q.hex.hover(3, true);
+        await QuickPickHex.sleep(180);
+        await q.cursor.click();
+        q.hex.setIcon(3, "pause");
+        await QuickPickHex.sleep(400);
+        q.hex.hover(3, false);
+      } },
+
+    // 6. move back to its original spot, click outside → menu hides
+    { fn: async function (q) {
+        await q.cursor.move(entryX, entryY, 400);
+        await q.cursor.click();
+        q.window.hide();
+      } },
+    { sleep: 900 }
+  ];
+
+  QuickPickHex.runSequence(qp, steps, {
+    loop: true,
+    reducedMotion: async function (q) {
+      q.cursor.place(summonX + 4, summonY + 6);
+      q.window.show(summonX, summonY);
+    }
+  });
+})();
+});
+</script>
+</body>
+</html>

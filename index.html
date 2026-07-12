@@ -11,20 +11,10 @@
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <div class="nav-logo">QuickPick</div>
-    <ul class="nav-links">
-      <li><a href="#hero">Home</a></li>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#discord">Discord</a></li>
-      <li><a href="pages/download.html" class="nav-cta">Download for Windows 11</a></li>
-    </ul>
-  </nav>
-
   <!-- TITLE -->
   <section class="title-section" id="hero">
     <h1><span class="title-line-1">Your commands,</span><br /><span class="gradient-text title-line-2">right at your cursor.</span></h1>
+    <a href="pages/download.html" class="nav-cta hero-download-cta">Download for Windows 11</a>
     <p class="hero-sub title-sub">
       QuickPick brings apps, shortcuts, and custom actions to the point of action,
       so you can stay in flow instead of crossing screens.
@@ -42,16 +32,14 @@
           <h3>Built-in system controls</h3>
           <p>Adjust brightness, volume, and media playback right from the same menu — no extra hotkeys or tray icons to hunt for.</p>
         </div>
-        <!-- <div class="feature-card" data-features-slide>
-          <div class="feature-card-image" data-customization-carousel>
-            <img class="customization-image is-active" src="assets/images/Custom1.png" alt="Customization option 1" />
-            <img class="customization-image" src="assets/images/custom2.png" alt="Customization option 2" />
-            <img class="customization-image" src="assets/images/custom3.png" alt="Customization option 3" />
+        <div class="feature-card" data-features-slide>
+          <div class="feature-card-image feature-card-image--demo">
+            <iframe class="feature-demo-frame" src="assets/demos/quickpick-customize-demo.html" title="QuickPick hex menu demo — customizing the grid" loading="lazy" scrolling="no"></iframe>
           </div>
           <h3>Customize every action</h3>
           <p>Pin the apps, shortcuts, and tools you use most, and shape the grid around how you actually work.</p>
         </div>
-        <div class="feature-card" data-features-slide>
+        <!-- <div class="feature-card" data-features-slide>
           <div class="feature-card-image">
             <img src="assets/images/RDP.jpg" alt="QuickPick hex menu running consistently on both sides of a Remote Desktop session" />
           </div>
@@ -78,7 +66,7 @@
           <button class="features-indicator is-active" data-features-indicator aria-label="Show feature 1" aria-pressed="true"></button>
           <button class="features-indicator" data-features-indicator aria-label="Show feature 2" aria-pressed="false"></button>
           <button class="features-indicator" data-features-indicator aria-label="Show feature 3" aria-pressed="false"></button>
-          <!-- <button class="features-indicator" data-features-indicator aria-label="Show feature 4" aria-pressed="false"></button> -->
+          <button class="features-indicator" data-features-indicator aria-label="Show feature 4" aria-pressed="false"></button>
         </div>
         <div class="features-carousel-controls">
           <button class="hero-nav-button" data-features-prev aria-label="Previous feature">‹</button>
@@ -110,6 +98,5 @@
 
   <script src="assets/js/home-hero-slider.js"></script>
   <script src="assets/js/features-carousel.js"></script>
-  <script src="assets/js/customization-carousel.js"></script>
 </body>
 </html>

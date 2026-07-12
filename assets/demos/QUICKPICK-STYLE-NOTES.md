@@ -92,6 +92,86 @@ context menus) are square or very slightly rounded.
   (volume/brightness). No changes needed here for new demos — reuse
   `QuickPickHex.create()`.
 
+## Hex ring structure (`HexPositionsCalculator.cs`, `HexGridCreator.cs`, `HexCenter.xaml.cs`)
+
+The real app's hex menu is a **center hex + up to 2 outer rings**, generated
+algorithmically (fixed spiral layout — positions are never user-configurable,
+only *which command occupies which slot index* is):
+
+| Ring | Hex count | Cumulative total |
+|---|---|---|
+| Center | 1 | 1 |
+| Ring 1 | 6 | 7 |
+| Ring 2 | 12 | 19 |
+
+`HexCenter.xaml.cs` sizes the default menu at all 4 rings (`1+6+12+18+24 = 61`
+slots), but any prefix works — the settings-editor mini preview
+(`CustomCommandsViewModel.cs`) uses just center+ring1+ring2 (19 hexes). A demo
+does **not** need to fill every slot: unbound indices simply render empty
+(no hex button drawn there), matching how the real app leaves un-configured
+positions blank.
+
+`qp-core.js`'s `DEFAULT_CELLS` currently only defines the center + ring 1 (7
+cells, axial `{c,r}`). To demo a fuller/denser menu, extend `cells` in the
+`create()` config with ring-2 axial coordinates (same `x = k·1.5·c`,
+`y = k·√3·(r + 0.5c)` mapping already used by `hexXY()`):
+
+```js
+// Ring 2 (12 hexes), axial coords, usable as extra `cells` entries:
+[{c:-2,r:0},{c:-1,r:-1},{c:0,r:-2},{c:1,r:-2},{c:2,r:-2},{c:2,r:-1},
+ {c:2,r:0},{c:1,r:1},{c:0,r:2},{c:-1,r:2},{c:-2,r:2},{c:-2,r:1}]
+```
+
+Append these after `DEFAULT_CELLS` (indices 7–18) when a demo wants to show
+a denser/"power user" configuration; `bindings[i]` / `icons` line up by the
+same index.
+
+## What a hex can hold: commands, steps, icons, profiles (`Utilities/Commands/`)
+
+Each hex slot is bound to a **Command** (`Command.cs`) — a demo shows
+QuickPick's real capability space by varying which of these a hex displays:
+
+- **`CommandType.System`** — built-in one-step actions (`DefinedActions.cs`):
+  Settings, Minimize, Play/Pause, Next Track, Previous Track. These are the
+  ones already ported 1:1 to `qp-icons.js`: `tools` (Settings), `minimize`,
+  `play`/`pause`, `forward` (next), `backward` (previous).
+- **`CommandType.VolumeSlider`** / **`CommandType.BrightnessSlider`** —
+  render as a drag/scroll gauge hex (the `qp-core.js` `setGauge()`/
+  `clearGauge()` API already models this), icons `volume` and `adjust`.
+- **`CommandType.Custom`** — a user-authored chain of one or more **steps**
+  (`Utilities/Commands/Steps/`), the richest category and the best one for
+  "look how flexible this is" demo hexes:
+  - `StartApplicationStep` — launch an app/executable (icon: the app's own
+    icon, auto-extracted — i.e. a launched-app hex shows that app's real
+    icon, not a generic glyph)
+  - `KeyCombinationStep` / `KeySequenceStep` — send a hotkey or key sequence
+  - `TextWriterStep` — type/insert canned text (snippets, signatures)
+  - `PowerShellCommandStep` — run a custom PowerShell script
+  - `MediaStep` — media transport control (same play/pause/next/prev as the
+    System actions, but assignable as a Custom step)
+  - `MinimizeStep` — window management (minimize active window)
+  - `SettingsMenuStep` — open QuickPick's settings
+
+Icons are a property of the **Command**, not chosen independently: default
+icon is a FontAwesome5 glyph (`EFontAwesomeIcon`), optionally overridden by
+`CustomIconBase64` — either a user-picked image or an auto-extracted app
+icon (`StartApplicationStep`). So a demo's `qp-icons.js` additions for
+Custom-command hexes (launch/script/hotkey/text) should look like distinct
+glyphs per step type, plus at least one hex showing a "real app icon" square
+instead of a glyph to sell the app-launch case.
+
+**Profiles** (`ProfileService.cs`): a profile is just a named
+`Dictionary<hexIndex, commandId>` — the full set of hex bindings, saved/
+loaded/listed/renamed as a unit, default name `"Standard"`. This is the
+right mental model for "lots of different configurations" in a demo: build
+several `bindings`/`cells` arrays (e.g. "Media Profile", "Dev Profile",
+"Browser Profile") and show switching between them, rather than inventing
+per-hex behavior not backed by the real model. `ProfileTriggers.cs` also
+defines an (extensible, currently app-based) auto-switch-profile-by-active-
+app mechanism — good framing for a "QuickPick adapts to what you're doing"
+demo beat, even though other trigger types (time of day, hotkey, window
+title) are only scaffolded, not implemented yet.
+
 ## Known demo-engine gotcha
 
 `qp-core.js`'s `offsetRelativeTo()` walks `offsetLeft`/`offsetTop` up the

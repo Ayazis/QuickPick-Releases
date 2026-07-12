@@ -17,7 +17,7 @@
     <p class="hero-sub title-sub">
       Create buttons for apps, media controls, scripts, keyboard shortcuts, text snippets, and more. Summon them anywhere with a single hotkey.
     </p>
-    <a href="pages/download.html" class="nav-cta hero-download-cta">Download QuickPick</a>
+    <a href="#download" class="nav-cta hero-download-cta">Download QuickPick</a>
   </section>
 
   <!-- FEATURES -->
@@ -78,6 +78,37 @@
     </div>
   </section>
 
+  <!-- DOWNLOAD -->
+  <section class="download-page-main" id="download">
+    <h2 class="download-page-title">Download QuickPick</h2>
+    <p class="download-page-subtitle">Go on, put your apps and actions within reach.</p>
+    <div class="download-grid">
+      <article class="download-card download-card-preview" data-channel="prerelease">
+        <div class="download-card-header">
+          <span class="download-pill">Alpha</span>
+        </div>
+        <p class="download-version" data-field="version">Loading...</p>
+        <p class="download-meta" data-field="published">Checking latest -alpha release...</p>
+        <p class="download-description">
+          Try the latest -alpha build before features land in stable.
+        </p>
+        <p class="download-status" data-field="status"></p>
+        <div class="download-actions">
+          <a class="btn-primary" data-field="download-link" href="#" aria-disabled="true">Preparing download</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="notice download-note">
+      <span class="notice-icon">⚠️</span>
+      <span>
+        <strong>First-run warning:</strong> Because QuickPick is not code-signed yet, Windows may show a "Windows has protected your PC" message.
+        To bypass it, right-click the <code>.exe</code>, open <strong>Properties</strong>, and check <strong>Unblock</strong> in the Security section.
+      </span>
+      <img class="download-note-image" src="assets/images/Unblock.jpg" alt="Windows file properties dialog with the Unblock checkbox highlighted" />
+    </div>
+  </section>
+
   <!-- DISCORD CTA -->
   <section class="cta" id="discord">
     <div class="cta-card">
@@ -100,6 +131,6 @@
   <script src="assets/js/home-hero-slider.js"></script>
   <script src="assets/js/features-carousel.js"></script>
   <script src="assets/js/releases-data.js"></script>
-  <script>window.QuickPickReleases.fetchReleases().catch(() => {});</script>
+  <script src="assets/js/downloads.js"></script>
 </body>
 </html>

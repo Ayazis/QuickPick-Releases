@@ -1,0 +1,111 @@
+/* QuickPick hex-menu demo — core engine styles.
+   Shared by all qp-* demos. Include after normalizing page styles. */
+
+.qp-demo {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  background: radial-gradient(120% 120% at 50% 30%, #101014 0%, #050507 70%);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  user-select: none;
+  /* max-width & aspect-ratio are set inline by qp-core.js from the
+     instance's stageWidth/stageHeight config */
+}
+.qp-stage {
+  position: absolute;
+  left: 0; top: 0;
+  transform-origin: 0 0; /* sized + scaled by JS to fit */
+}
+
+/* ── Hotkey chip ─────────────────────────────── */
+.qp-hotkey {
+  position: absolute;
+  left: 50%; bottom: 16px;
+  transform: translateX(-50%);
+  display: flex; align-items: center; gap: 5px;
+  opacity: 0.55;
+  transition: opacity .25s;
+}
+.qp-hotkey.pressed { opacity: 1; }
+.qp-hotkey.hidden { opacity: 0; }
+.qp-key {
+  padding: 3px 9px;
+  border: 1px solid #4a4a4a;
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: #1c1c1f;
+  color: #cfcfcf;
+  font-size: 12px;
+  transition: background .12s, transform .12s, border-color .12s;
+}
+.qp-plus { color: #777; font-size: 12px; }
+.qp-hotkey.pressed .qp-key {
+  background: #2e2e33;
+  border-color: #29d3e0;
+  color: #fff;
+  transform: translateY(1px);
+}
+
+/* ── QuickPick window ────────────────────────── */
+.qp-window {
+  position: absolute;
+  width: 200px; height: 200px;
+  margin-left: -100px; margin-top: -100px; /* centered on summon point */
+  opacity: 0;
+  transform: scale(.94);
+  pointer-events: none;
+}
+.qp-window.shown {
+  opacity: 1;
+  transform: scale(1);
+  /* showMe storyboard: fade-in with back-ease */
+  transition: opacity .38s ease-out, transform .45s cubic-bezier(.34,1.56,.64,1);
+}
+.qp-window.hiding {
+  opacity: 0;
+  transform: scale(1);
+  transition: opacity .55s ease-in; /* hideMe: plain fade */
+}
+.qp-hexcanvas { position: absolute; left: 0; top: 0; width: 200px; height: 200px; }
+
+/* Hex button: 40x40 QpButton over a 50x50 #1a1a1a backdrop hex */
+.qp-hex { position: absolute; width: 50px; height: 50px; }
+.qp-hex > svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.qp-hex .qp-icon {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 13px; height: 13px;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  transition: color .15s;
+}
+.qp-hex .qp-icon svg { width: 100%; height: 100%; display: block; }
+.qp-hex.hover .qp-icon { color: #d3d3d3; }
+
+/* ── Cursor ──────────────────────────────────── */
+.qp-cursor {
+  position: absolute;
+  left: 0; top: 0;
+  z-index: 10;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.6));
+  pointer-events: none;
+}
+.qp-cursor > svg { display: block; }
+.qp-ripple {
+  position: absolute;
+  left: 1px; top: 1px;
+  width: 26px; height: 26px;
+  margin: -13px 0 0 -13px;
+  border: 2px solid rgba(120,220,235,.9);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(.3);
+}
+.qp-ripple.go {
+  opacity: 0;
+  transform: scale(1.15);
+  transition: transform .4s ease-out, opacity .4s ease-out;
+}
+.qp-ripple.pre { opacity: .9; transform: scale(.3); transition: none; }

@@ -27,11 +27,15 @@ Whether you're switching between apps, adjusting volume, or minimizing a window,
 * **Remote Desktop compatible**
   QuickPick still works on your local machine even when you're inside a full-screen RDP window.
 
+* **Custom commands**
+  Create your own commands for things like custom text, appstart actions, scripts, files, or shortcuts, then launch them from QuickPick instantly.
+
 ---
 
 ## 🛠️ Requirements
 * Windows 11
-* .Net 8 runtime
+
+QuickPick is a standalone app.
 ---
 
 ## ⚠️ Known Limitations

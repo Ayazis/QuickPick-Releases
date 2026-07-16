@@ -1,0 +1,15 @@
+{
+  "name": "quickpick-social-export",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Record the QuickPick landing-page demos to high-quality social-media video/GIF.",
+  "scripts": {
+    "postinstall": "playwright install chromium",
+    "record": "node record-demos.mjs",
+    "all": "node record-demos.mjs --all --gif"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

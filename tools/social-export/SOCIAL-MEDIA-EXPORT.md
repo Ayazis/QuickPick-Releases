@@ -36,9 +36,17 @@ encode.** Never re-export an already-exported MP4.
 1. **Capture lossless.** We grab PNG frames straight from the browser's
    compositor (Chrome DevTools `Page.startScreencast`, `format: png`). No
    capture-layer compression, no screen-recorder artifacts.
-2. **Capture at 2× (Retina).** Render with `deviceScaleFactor: 2` so the source
-   is twice the delivery resolution. Downscaling sharp UI from 2× looks far
-   cleaner than delivering at 1× or upscaling later. Never upscale a 1× capture.
+2. **Supersample to 3× — the real way.** `Page.startScreencast` captures the
+   surface at CSS-pixel size and *ignores* `deviceScaleFactor`, so you can't get
+   a hi-res capture by scaling the device (verified: DSF 3 still yields a 1×
+   frame). Instead we make the demo physically larger in real CSS pixels:
+   `qp-core` sizes its stage to the container width (stage scale =
+   `clientWidth / stageWidth`) via a `ResizeObserver`, so widening the container
+   to `stageWidth × 3` re-renders the whole demo — crisp, re-rasterized (SVG
+   icons, borders, gradients all sharp) — at 3×. The 1× screencast then records
+   that at full resolution. A 380 px stage becomes 1140 px; after cropping to the
+   menu we downscale to the delivery size, so every preset is a clean downscale,
+   never an upscale.
 3. **60 fps.** UI micro-interactions (cursor moves, hex pops, gauge drags) look
    noticeably smoother at 60 than 30. We resample the real frame timestamps to a
    constant 60 fps on the single encode.
@@ -72,6 +80,19 @@ encode.** Never re-export an already-exported MP4.
     run the MP4 back through another export.
 
 ---
+
+## Framing (no cropping)
+
+Each demo's whole animation — hex menu, cursor path, the "Ctrl+Space" hotkey
+chip — is positioned within its own fixed `.qp-demo` stage (`stageWidth ×
+stageHeight`, set by the demo itself) *by construction*. So instead of
+measuring and cropping to a hand-picked box (which is exactly how the hotkey
+chip got clipped out of frame in an earlier version), we simply capture that
+whole stage and **scale-to-fit + pad** into the delivery aspect ratio — never
+crop. This guarantees the entire animation stays in frame, always, with no
+per-demo tuning needed. The tradeoff: on a very different aspect ratio (e.g.
+16:9 landscape from a roughly-square stage) you get letterboxing (padding on
+the sides) rather than a tight, cropped-in shot — but nothing is ever cut off.
 
 ## Platform aspect ratios
 
@@ -112,15 +133,28 @@ full res). Never a naive one-pass GIF.
 
 ---
 
-## Seamless loops
+## Seamless loops (start/end sync)
 
-The demos loop forever. For a clean loop, capture **exactly one loop's
-duration** with `--seconds`, so the last frame hands back to the first with no
-visible jump. Roughly-known per-demo loop lengths are in `record-demos.mjs`
-(`DEMOS[].loopSeconds`) — tune them if a clip stutters at the wrap.
+The demos loop forever (`QuickPickHex.runSequence(..., {loop: true})`), starting
+the instant the page loads. Naively waiting a fixed delay before/after recording
+lands capture at an arbitrary point in the loop — not the animation's actual
+start, and not a clean end either.
 
-For MP4 you can also just capture 2–3 loops and let the platform's autoplay-loop
-handle repetition; for GIF the single-loop capture matters.
+Instead we sync to the loop itself. Every demo's step list runs through the
+library's public `{fn: async (instance) => …}` escape hatch (see `qp-core.js`),
+so `record-demos.mjs` wraps `QuickPickHex.runSequence` from outside (via
+`page.addInitScript`, before any demo script runs) to bump a counter at the top
+of every iteration — no edits to the shared demo files needed. Capture:
+
+- **starts** at the loop's 2nd boundary (not the 1st — that one starts at page
+  load, before fonts/first paint are necessarily settled),
+- **stops** at the *next* boundary (3rd),
+
+so by default (no `--seconds`) every clip covers exactly one full iteration,
+start to end, with the last frame handing back to the first with no visible
+jump — a real seamless loop, not a guessed duration. Pass `--seconds <n>` to
+override with a fixed length instead (e.g. to capture multiple loops for an
+MP4 that doesn't rely on the platform's own autoplay-loop).
 
 ---
 

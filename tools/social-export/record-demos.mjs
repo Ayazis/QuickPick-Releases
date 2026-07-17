@@ -6,8 +6,9 @@
 //      compositor via CDP Page.startScreencast, keeping each frame's real
 //      timestamp.
 //   3. Hand the frames to ffmpeg for a SINGLE lossy encode: resample to a
-//      constant 60fps, lanczos-scale to fit the platform aspect ratio, pad the
-//      rest with the demo background, x264 CRF 16, preset slow, yuv420p.
+//      constant 60fps, lanczos-scale the whole captured stage to FIT the
+//      platform aspect ratio (never cropped, so nothing drops out of frame),
+//      pad the rest with the demo background, x264 CRF 16, preset slow, yuv420p.
 //   4. Optionally emit a properly-dithered two-pass GIF as a fallback.
 //
 // Usage:
@@ -28,15 +29,22 @@ const DEMOS_DIR = path.resolve(__dirname, "../../assets/demos");
 const OUT_DIR = path.resolve(__dirname, "out");
 const BG = "0x0b0b0d"; // demo background (#0b0b0d) — used for padding
 
-// Per-demo config. `loopSeconds` is the approximate length of one animation
-// loop; capturing exactly that gives a seamless GIF/loop wrap. Tune if a clip
-// stutters at the loop boundary. Viewport is kept tight to the 380x370 stage
-// with a little breathing room; the demo centers itself and fills the rest
-// with its own background.
+// Per-demo config. `loopSeconds` is only a rough estimate of one loop's length,
+// used as a safety-timeout multiplier — actual capture start/end are detected
+// live from the animation's own loop-boundary counter (see captureFrames), not
+// timed off this value. Only matters if a demo's loop is unexpectedly slow.
+//
+// stageW/stageH: the demo's native stage size (from its qp-core config) — every
+// element the animation ever touches (hex menu, cursor path, the "Ctrl+Space"
+// hotkey chip) is positioned within these bounds BY THE DEMO ITSELF, so capturing
+// exactly this box captures the whole animation, guaranteed, with no manual
+// measuring or guessing at a crop. We render at SCALE× this size (see
+// captureFrames) so the captured surface is stageW*SCALE × stageH*SCALE pixels,
+// then scale+pad (never crop) into the delivery aspect ratio.
 const DEMOS = {
-  hex:       { file: "quickpick-hex-demo.html",       loopSeconds: 11, width: 420, height: 410 },
-  appswitch: { file: "quickpick-appswitch-demo.html", loopSeconds: 12, width: 420, height: 410 },
-  customize: { file: "quickpick-customize-demo.html", loopSeconds: 16, width: 440, height: 430 },
+  hex:       { file: "quickpick-hex-demo.html",       loopSeconds: 11, stageW: 380, stageH: 370 },
+  appswitch: { file: "quickpick-appswitch-demo.html", loopSeconds: 12, stageW: 380, stageH: 370 },
+  customize: { file: "quickpick-customize-demo.html", loopSeconds: 16, stageW: 380, stageH: 370 },
 };
 
 // Delivery sizes (even dimensions, padded on BG). See the doc's table.
@@ -77,6 +85,16 @@ function resolvePreset(name) {
 }
 
 const FPS = 60;
+// Supersample factor. CDP screencast captures the render surface at CSS-pixel
+// size and ignores deviceScaleFactor, so we can't get a hi-res capture by
+// scaling the device. Instead we make the demo physically larger in real CSS
+// pixels: qp-core sizes its stage to the container width (stage scale =
+// clientWidth / stageWidth) via a ResizeObserver, so widening the container to
+// stageWidth×SCALE makes the whole demo re-render (crisp, re-rasterized) at
+// SCALE×. The 1× screencast then captures that at full resolution. At 3× a
+// 380px stage renders 1140px — after cropping to the menu we downscale to the
+// delivery size, never upscale, which keeps sharp UI band-free.
+const SCALE = 3;
 
 function parseArgs(argv) {
   const args = { presets: [], demos: [], gif: false, seconds: null, crf: 16 };
@@ -107,7 +125,8 @@ function printHelp() {
                      or explicit WxH, e.g. 1200x628   (repeatable; default: portrait)
   --all              every demo × the 4 aspect presets
   --gif              also emit a two-pass GIF fallback
-  --seconds <n>      capture length; default = the demo's one-loop length
+  --seconds <n>      fixed capture length in seconds; default: auto-detect one
+                     full loop (boundary-to-boundary, frame-perfect seamless)
   --crf <n>          x264 quality 15-18, lower = better (default 16)
 
 Outputs to tools/social-export/out/`);
@@ -131,6 +150,9 @@ function checkFfmpeg() {
 
 // Capture lossless png frames from a demo via CDP screencast. Returns the temp
 // frame directory and the wall-clock timestamps (seconds) of each frame.
+// `seconds`: null = auto (capture exactly one loop, boundary-to-boundary, for a
+// frame-perfect seamless loop); a number = capture that fixed duration instead
+// (e.g. to grab multiple loops).
 async function captureFrames(demo, seconds) {
   const { chromium } = await import("playwright");
   const demoPath = path.join(DEMOS_DIR, demo.file);
@@ -141,15 +163,48 @@ async function captureFrames(demo, seconds) {
 
   const browser = await chromium.launch({ args: ["--force-color-profile=srgb"] });
   const context = await browser.newContext({
-    viewport: { width: demo.width, height: demo.height },
-    deviceScaleFactor: 2,          // Retina: capture at 2× the CSS size
+    // Viewport = the demo rendered at SCALE×, so it fills the frame and the
+    // screencast (captured at CSS-pixel size) is a true SCALE× surface.
+    viewport: { width: demo.stageW * SCALE, height: demo.stageH * SCALE },
     reducedMotion: "no-preference", // force the full animation, not the RM fallback
     colorScheme: "dark",
   });
   const page = await context.newPage();
+  // Every demo's animation is `QuickPickHex.runSequence(instance, steps, {loop:
+  // true})`, which starts the instant the page loads and loops forever — so
+  // starting capture after an arbitrary settle delay lands us mid-loop, not at
+  // the animation's actual start. Before any page script runs, wrap
+  // `runSequence` (via its public `{fn: async (instance) => ...}` step escape
+  // hatch — see qp-core.js) to bump a counter at the top of every iteration, so
+  // we can wait for a real loop boundary instead of guessing a timeout.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "QuickPickHex", {
+      configurable: true,
+      set(qph) {
+        const origRunSequence = qph.runSequence;
+        qph.runSequence = function (instance, steps, opts) {
+          const marker = { fn: async () => { window.__qpLoopCount = (window.__qpLoopCount || 0) + 1; } };
+          return origRunSequence(instance, [marker, ...steps], opts);
+        };
+        Object.defineProperty(window, "QuickPickHex", { value: qph, writable: true, configurable: true });
+      },
+    });
+  });
   await page.goto("file://" + demoPath.replace(/\\/g, "/"));
-  // Let fonts/first paint settle and the loop reach a clean start.
-  await page.waitForTimeout(700);
+  // Widen the demo container to stageW×SCALE. qp-core's ResizeObserver reacts by
+  // rescaling the stage (scale = clientWidth / stageWidth = SCALE), so the whole
+  // demo re-renders — crisply re-rasterized, not upscaled — at SCALE× real px.
+  await page.evaluate((w) => {
+    const d = document.querySelector(".qp-demo");
+    d.style.maxWidth = w + "px";
+    d.style.width = w + "px";
+    window.dispatchEvent(new Event("resize")); // nudge in case ResizeObserver is async
+  }, demo.stageW * SCALE);
+  // Wait for the SECOND loop boundary (not the first): the first iteration
+  // starts at page load, before fonts/first paint have necessarily settled.
+  // By the second boundary everything is warmed up, and we start capturing
+  // frame-synced to that boundary — the true start of the animation, every time.
+  await page.waitForFunction(() => window.__qpLoopCount >= 2, { timeout: 30000 });
 
   const client = await context.newCDPSession(page);
   const frames = [];
@@ -166,7 +221,16 @@ async function captureFrames(demo, seconds) {
   });
 
   await client.send("Page.startScreencast", { format: "png", everyNthFrame: 1 });
-  await page.waitForTimeout(seconds * 1000);
+  if (seconds == null) {
+    // Auto: stop at the NEXT loop boundary (count 2 → 3), so the clip covers
+    // exactly one full iteration, start to end. Combined with starting capture
+    // at a boundary, this makes the last frame hand back to the first with no
+    // visible jump — a true seamless loop, not a guessed duration.
+    const safetyMs = (demo.loopSeconds * 3 + 15) * 1000;
+    await page.waitForFunction(() => window.__qpLoopCount >= 3, { timeout: safetyMs });
+  } else {
+    await page.waitForTimeout(seconds * 1000);
+  }
   await client.send("Page.stopScreencast");
   await Promise.all(frames);
   await browser.close();
@@ -194,21 +258,24 @@ async function writeConcat(framesDir, times) {
   return concatPath;
 }
 
-// scale-to-fit + pad-to-fill filter for a target size, on the demo background.
-function fitPad(w, h) {
+// Scale-to-fit → pad-to-fill, on the demo background. No cropping: the source
+// is already exactly the demo's stage bounds, which contain the entire
+// animation by construction, so fitting the whole frame in is what keeps
+// everything — hex menu, cursor path, hotkey chip — always in shot.
+function fitPad(w, h, extra = "") {
   return (
     `scale=${w}:${h}:force_original_aspect_ratio=decrease:flags=lanczos,` +
-    `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=${BG},` +
-    `fps=${FPS},format=yuv420p`
+    `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=${BG}` +
+    (extra ? "," + extra : "")
   );
 }
 
-async function encodeMp4(concatPath, preset, crf, outPath) {
+async function encodeMp4(demo, concatPath, preset, crf, outPath) {
   const { w, h } = preset;
   await run("ffmpeg", [
     "-y",
     "-f", "concat", "-safe", "0", "-i", concatPath,
-    "-vf", fitPad(w, h),
+    "-vf", fitPad(w, h, `fps=${FPS},format=yuv420p`),
     "-c:v", "libx264", "-crf", String(crf), "-preset", "slow",
     "-pix_fmt", "yuv420p", "-movflags", "+faststart",
     outPath,
@@ -217,14 +284,11 @@ async function encodeMp4(concatPath, preset, crf, outPath) {
 
 // Two-pass GIF: build a palette from the clip, then apply it with dithering.
 // Sized down (GIF is heavy) but still fit+padded to the preset aspect ratio.
-async function encodeGif(concatPath, preset, outPath) {
-  const scale = preset.w >= preset.h ? 640 : -1;
+async function encodeGif(demo, concatPath, preset, outPath) {
   const gw = preset.w >= preset.h ? 640 : Math.round((preset.w / preset.h) * 640 / 2) * 2;
   const gh = preset.w >= preset.h ? Math.round((preset.h / preset.w) * 640 / 2) * 2 : 640;
   const gfps = 30; // GIFs above ~30fps balloon for little gain
-  const vf =
-    `scale=${gw}:${gh}:force_original_aspect_ratio=decrease:flags=lanczos,` +
-    `pad=${gw}:${gh}:(ow-iw)/2:(oh-ih)/2:color=${BG},fps=${gfps}`;
+  const vf = fitPad(gw, gh, `fps=${gfps}`);
   const palette = outPath.replace(/\.gif$/, ".palette.png");
   await run("ffmpeg", ["-y", "-f", "concat", "-safe", "0", "-i", concatPath,
     "-vf", `${vf},palettegen=stats_mode=diff`, palette]);
@@ -249,9 +313,12 @@ async function main() {
 
   for (const demoName of args.demos) {
     const demo = DEMOS[demoName];
-    const seconds = args.seconds ?? demo.loopSeconds;
-    console.log(`\n▶ ${demoName}: capturing ${seconds}s of lossless frames…`);
-    const { framesDir, times, count } = await captureFrames(demo, seconds);
+    console.log(
+      args.seconds == null
+        ? `\n▶ ${demoName}: capturing one full loop (boundary-to-boundary) of lossless frames…`
+        : `\n▶ ${demoName}: capturing ${args.seconds}s of lossless frames…`
+    );
+    const { framesDir, times, count } = await captureFrames(demo, args.seconds);
     console.log(`  captured ${count} frames`);
     const concatPath = await writeConcat(framesDir, times);
 
@@ -260,11 +327,11 @@ async function main() {
         const preset = resolvePreset(presetName);
         const mp4 = path.join(OUT_DIR, `${demoName}-${presetName}.mp4`);
         console.log(`  encoding ${presetName} → ${path.basename(mp4)} (crf ${args.crf})`);
-        await encodeMp4(concatPath, preset, args.crf, mp4);
+        await encodeMp4(demo, concatPath, preset, args.crf, mp4);
         if (args.gif) {
           const gif = path.join(OUT_DIR, `${demoName}-${presetName}.gif`);
           console.log(`  encoding ${presetName} GIF → ${path.basename(gif)}`);
-          await encodeGif(concatPath, preset, gif);
+          await encodeGif(demo, concatPath, preset, gif);
         }
       }
     } finally {

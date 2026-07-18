@@ -231,6 +231,13 @@ async function captureFrames(demo, seconds) {
   } else {
     await page.waitForTimeout(seconds * 1000);
   }
+  // CDP screencast only emits a frame on repaint — during a static hold (e.g.
+  // the ~900ms pause after the menu finishes hiding, before the next loop
+  // starts) NO frames arrive even though real time is still passing. Capture
+  // wall-clock "now" on the same clock as frame.metadata.timestamp right before
+  // stopping, so the trailing static period can be measured and preserved
+  // instead of being silently dropped.
+  const stopWallTime = Date.now() / 1000;
   await client.send("Page.stopScreencast");
   await Promise.all(frames);
   await browser.close();
@@ -238,16 +245,24 @@ async function captureFrames(demo, seconds) {
   if (timestamps.length < 2) throw new Error("Screencast produced no frames");
   // Normalize timestamps to start at 0 (seconds).
   const t0 = timestamps[0];
-  return { framesDir, times: timestamps.map((t) => t - t0), count: timestamps.length };
+  return {
+    framesDir,
+    times: timestamps.map((t) => t - t0),
+    endTime: stopWallTime - t0,
+    count: timestamps.length,
+  };
 }
 
 // Build an ffmpeg concat file that preserves each frame's real on-screen
 // duration, so the constant-60fps resample downstream is timed correctly.
-async function writeConcat(framesDir, times) {
+// `endTime` (seconds, same origin as `times`) is when capture actually
+// stopped — used as the last frame's end bound so a trailing static hold
+// (no repaints, so no new screencast frames) isn't truncated to 1/FPS.
+async function writeConcat(framesDir, times, endTime) {
   const files = (await readdir(framesDir)).filter((f) => f.endsWith(".png")).sort();
   const lines = [];
   for (let i = 0; i < files.length; i++) {
-    const dur = i < times.length - 1 ? times[i + 1] - times[i] : 1 / FPS;
+    const dur = i < times.length - 1 ? times[i + 1] - times[i] : Math.max(endTime - times[i], 1 / FPS);
     lines.push(`file '${path.join(framesDir, files[i]).replace(/\\/g, "/")}'`);
     lines.push(`duration ${Math.max(dur, 1 / 1000).toFixed(6)}`);
   }
@@ -318,9 +333,9 @@ async function main() {
         ? `\n▶ ${demoName}: capturing one full loop (boundary-to-boundary) of lossless frames…`
         : `\n▶ ${demoName}: capturing ${args.seconds}s of lossless frames…`
     );
-    const { framesDir, times, count } = await captureFrames(demo, args.seconds);
+    const { framesDir, times, endTime, count } = await captureFrames(demo, args.seconds);
     console.log(`  captured ${count} frames`);
-    const concatPath = await writeConcat(framesDir, times);
+    const concatPath = await writeConcat(framesDir, times, endTime);
 
     try {
       for (const presetName of args.presets) {

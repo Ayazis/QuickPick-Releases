@@ -92,6 +92,30 @@ function updateCard(channel, release) {
     label: asset ? 'Download now' : 'Open release notes',
     disabled: false
   });
+
+  // Core conversion event: land -> download. channel/version are stashed on
+  // the element and refreshed on every call, so a later updateCard() (e.g. a
+  // future refresh/retry) keeps the tracked data in sync with what's
+  // rendered. The listener itself is bound once to avoid stacking duplicate
+  // handlers; reading from the dataset (rather than closing over `release`)
+  // keeps it current without re-binding and avoids pinning the release
+  // object in memory. Guarded via optional chaining so a missing analytics
+  // module (blocked/not loaded) can never break the actual download.
+  downloadLink.dataset.trackChannel = channel;
+  downloadLink.dataset.trackVersion = formatVersion(release);
+
+  if (!downloadLink.dataset.trackBound) {
+    downloadLink.dataset.trackBound = 'true';
+    downloadLink.addEventListener('click', () => {
+      if (downloadLink.getAttribute('aria-disabled') === 'true') {
+        return;
+      }
+      window.QuickPickAnalytics?.track('download', {
+        channel: downloadLink.dataset.trackChannel,
+        version: downloadLink.dataset.trackVersion
+      });
+    });
+  }
 }
 
 function setErrorState(message) {

@@ -45,21 +45,32 @@ if (featuresCarousel) {
     });
   }
 
-  previousButton?.addEventListener('click', () => {
-    resetDemoFrames();
-    renderSlides(activeIndex - 1);
-  });
+  // "Which angle resonates" signal: fire on user-driven navigation only (not
+  // the initial render below), tagged with the slide's heading so the four
+  // positioning angles are legible in the dashboard. Lightweight + guarded.
+  function trackFeatureView() {
+    const heading = slides[activeIndex]?.querySelector('h3');
+    window.QuickPickAnalytics?.track('feature_view', {
+      index: activeIndex + 1,
+      title: heading ? heading.textContent.trim() : `slide-${activeIndex + 1}`
+    });
+  }
 
-  nextButton?.addEventListener('click', () => {
+  function navigateTo(nextIndex) {
+    const normalized = (nextIndex + slides.length) % slides.length;
+    if (normalized === activeIndex) {
+      return;
+    }
     resetDemoFrames();
-    renderSlides(activeIndex + 1);
-  });
+    renderSlides(normalized);
+    trackFeatureView();
+  }
+
+  previousButton?.addEventListener('click', () => navigateTo(activeIndex - 1));
+  nextButton?.addEventListener('click', () => navigateTo(activeIndex + 1));
 
   indicators.forEach((indicator, index) => {
-    indicator.addEventListener('click', () => {
-      resetDemoFrames();
-      renderSlides(index);
-    });
+    indicator.addEventListener('click', () => navigateTo(index));
   });
 
   renderSlides(activeIndex);

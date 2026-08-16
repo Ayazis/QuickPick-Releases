@@ -147,13 +147,25 @@ document.addEventListener("DOMContentLoaded", function () {
     { icon: appIcons.browser, title: "QuickPick Docs — Google Chrome", shot: thumbShot(browserInner) }
   ];
 
-  /* ── Engine instance: hex menu + app bar (running apps underlined) ── */
+  /* ── Engine instance: hex menu + app bar (running apps underlined) ──
+     Opens wide on the desktop — QuickPick summons at its real, small size
+     next to full-size app windows — then pushes in on the menu. */
+  var WORLD = { width: 760, height: 740 };
+  var OVERVIEW = { x: 380, y: 370, zoom: 0.5 };
+  var CLOSEUP_ZOOM = 1;
+  // The close shot sits a little below the summon point, so the menu keeps
+  // its original place in the upper half of the frame and whatever hangs
+  // under it (app bar, thumbnails) still fits.
+  var CLOSEUP_DROP = 80;
+
   var bindings = ["tools", "minimize", "forward", "play", "backward", "volume", "adjust"];
   var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
     bindings: bindings,
     icons: QpIcons,
     stageWidth: 380,
     stageHeight: 370,
+    world: WORLD,
+    camera: OVERVIEW,
     appBar: { apps: [
       { run: true, icon: appIcons.editor },
       { run: true, icon: appIcons.browser },
@@ -186,8 +198,10 @@ document.addEventListener("DOMContentLoaded", function () {
     qp.stage.insertBefore(el, desktop.nextSibling);
     return el;
   }
-  var winBrowser = makeWin(20, 45, browserInner, "back");
-  var winEditor = makeWin(148, 95, editorInner, "front");
+  // World coordinates — the old 380x370 frame is the middle of the 760x740
+  // desktop, so these are the old points + (190, 185).
+  var winBrowser = makeWin(210, 230, browserInner, "back");
+  var winEditor = makeWin(338, 280, editorInner, "front");
 
   function focus(winEl, otherEl) {
     winEl.classList.remove("back"); winEl.classList.add("front");
@@ -196,8 +210,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var thumb = QpThumbnail.build(qp.stage);
 
-  var summonX = 190, summonY = 105;
-  var entryX = 45, entryY = 330;
+  var summonX = 380, summonY = 290;
+  var entryX = 235, entryY = 515;
 
   /* Hover app-bar item i and (after the real app's short delay) show its
      window thumbnail. */
@@ -220,33 +234,38 @@ document.addEventListener("DOMContentLoaded", function () {
         winBrowser.classList.remove("peeked");
         winBrowser.style.transform = "";
         focus(winEditor, winBrowser);
+        q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom); // back to the wide shot
       } },
 
     // 1. cursor wanders in over the desktop
     { fn: async function (q) { q.cursor.place(entryX, entryY); await QuickPickHex.sleep(350); } },
-    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 550 },
+    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 650 },
     { sleep: 150 },
 
-    // 2. hotkey press → QuickPick summons at cursor, app bar shows the
-    //    running apps (underlined)
+    // 2. hotkey press → QuickPick summons at cursor, at its real size
+    //    beside the open windows; app bar shows the running apps (underlined)
     { fn: async function (q) {
         summonX = q.cursor.x + 8; summonY = q.cursor.y + 10;
         await q.hotkey.press();
         q.window.show(summonX, summonY);
       } },
-    { sleep: 650 },
+    { sleep: 700 },
 
-    // 3. hover the editor icon → its window thumbnail appears
+    // 3. push in on the menu — the cursor scales with the scene
+    { fn: async function (q) { await q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM, 900); } },
+    { sleep: 200 },
+
+    // 4. hover the editor icon → its window thumbnail appears
     { fn: async function (q) { await hoverApp(q, 0, 850); } },
 
-    // 4. slide over to the browser icon → thumbnail swaps to that window
+    // 5. slide over to the browser icon → thumbnail swaps to that window
     { fn: async function (q) {
         q.appBar.hover(0, false);
         thumb.hide();
         await hoverApp(q, 1, 550);
       } },
 
-    // 5. move onto the thumbnail → peek: the browser window comes forward,
+    // 6. move onto the thumbnail → peek: the browser window comes forward,
     //    everything else fades (ActivatePeek)
     { fn: async function (q) {
         var c = thumb.center();
@@ -257,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await QuickPickHex.sleep(850);
       } },
 
-    // 6. click the thumbnail → switch to the browser: QuickPick hides,
+    // 7. click the thumbnail → switch to the browser: QuickPick hides,
     //    the browser window takes focus
     { fn: async function (q) {
         await q.cursor.click();
@@ -272,14 +291,21 @@ document.addEventListener("DOMContentLoaded", function () {
         winBrowser.style.transform = "";
       } },
 
-    // 7. cursor drifts off; hold on the switched desktop, then loop
-    { cursor: "move", to: [entryX, entryY], ms: 500 },
-    { sleep: 1600 }
+    // 8. pull back out to the whole desktop, browser now in front, and hold
+    //    there — the payoff shot — before the loop restarts
+    { fn: async function (q) {
+        await Promise.all([
+          q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom, 750),
+          q.cursor.move(entryX, entryY, 750)
+        ]);
+      } },
+    { sleep: 1400 }
   ];
 
   QuickPickHex.runSequence(qp, steps, {
     loop: true,
     reducedMotion: async function (q) {
+      q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM); // no camera move: hold the close shot
       q.window.show(summonX, summonY);
       q.appBar.hover(1, true);
       thumb.showFor(q.appBar.els[1], thumbData[1]);

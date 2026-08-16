@@ -78,6 +78,16 @@ window.QpBrandIcons = (function () {
       '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4" fill="none" stroke="#31a8ff" stroke-width="1.3"/>' +
       letter('Ps', '#31a8ff', 9.5, 15.6)),
 
+    lightroom: svg(
+      tile('#001e36') +
+      '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4" fill="none" stroke="#8cd2ff" stroke-width="1.3"/>' +
+      letter('Lr', '#8cd2ff', 9.5, 15.6)),
+
+    illustrator: svg(
+      tile('#330000') +
+      '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="4" fill="none" stroke="#ff9a00" stroke-width="1.3"/>' +
+      letter('Ai', '#ff9a00', 9.5, 15.6)),
+
     figma: svg(
       tile('#1e1e22') +
       '<path d="M12 5h-2.6a2.6 2.6 0 1 0 0 5.2H12z" fill="#f24e1e"/>' +

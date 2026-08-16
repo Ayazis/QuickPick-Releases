@@ -1129,6 +1129,19 @@ footer a:hover { color: var(--text); }
   .feature-question-mark {
     font-size: 10rem;
   }
+  /* The indicator pills are a fixed 44px each and the footer doesn't wrap,
+     so every slide added pushed the whole section wider than the viewport.
+     Let them share the space that's left over instead. */
+  .features-carousel-indicators {
+    flex: 1;
+    min-width: 0;
+  }
+  .features-indicator {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 14px;
+    max-width: 44px;
+  }
   nav { padding: 0 20px; }
   .nav-links { gap: 16px; }
   .cta { padding: 36px 20px 28px; }

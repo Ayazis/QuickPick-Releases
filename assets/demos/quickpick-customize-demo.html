@@ -90,14 +90,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ── Center + ring 1 (default 7) + ring 2 (12 more, start empty) ── */
   var DEFAULT_BINDINGS = ["tools", "minimize", "forward", "play", "backward", "volume", "adjust"];
-  var RING2_CELLS = [
-    { c: -2, r: 0 }, { c: -1, r: -1 }, { c: 0, r: -2 }, { c: 1, r: -2 }, { c: 2, r: -2 }, { c: 2, r: -1 },
-    { c: 2, r: 0 },  { c: 1, r: 1 },   { c: 0, r: 2 },   { c: -1, r: 2 }, { c: -2, r: 2 },  { c: -2, r: 1 }
-  ];
-  var cells = [
-    { c: 0, r: 0 }, { c: 1, r: -1 }, { c: 1, r: 0 }, { c: 0, r: 1 }, { c: -1, r: 1 }, { c: -1, r: 0 }, { c: 0, r: -1 }
-  ].concat(RING2_CELLS);
-  var RING2_START = 7; // index of the first ring-2 slot
+  var cells = QuickPickHex.CELLS_R2;
+  var RING2_START = QuickPickHex.DEFAULT_CELLS.length; // index of the first ring-2 slot
 
   /* Unlike the other slides this one never plays the summon or the camera
      push-in — the system-controls slide already establishes those — so it
@@ -216,11 +210,14 @@ document.addEventListener("DOMContentLoaded", function () {
         await QuickPickHex.sleep(750);
       } },
 
-    // 2. a few hexes become custom commands — new icons fly in, not swapped in place
+    // 2. a few hexes become custom commands — new icons fly in, not swapped
+    //    in place. Lead with apps you recognise on sight; the step-type
+    //    glyphs (script, hotkey, settings) come later, so the menu reads as
+    //    "your apps" first and "and anything else" second.
     { fn: async function (q) {
         await flyIn(q, 2, "visualStudio");
         await QuickPickHex.sleep(200);
-        await flyIn(q, 4, "hotkey");
+        await flyIn(q, 4, "spotify");
         await QuickPickHex.sleep(200);
         await flyIn(q, 6, "script");
         await QuickPickHex.sleep(500);
@@ -240,7 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { fn: async function (q) {
         await flyIn(q, 1, "windowsTerminal");
         await QuickPickHex.sleep(200);
-        await flyIn(q, 3, "snippet");
+        await flyIn(q, 3, "hotkey");
         await QuickPickHex.sleep(500);
       } },
 
@@ -249,7 +246,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { fn: async function (q) {
         var rest = [
           [7, "abletonLive"], [8, "slack"], [11, "chrome"], [12, "notion"],
-          [14, "excel"], [15, "obsStudio"], [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
+          [14, "excel"], [15, "obsStudio"], [16, "fileExplorer"], [17, "settingsGear"], [18, "discordApp"]
         ];
         var last;
         for (var i = 0; i < rest.length; i++) {
@@ -269,12 +266,12 @@ document.addEventListener("DOMContentLoaded", function () {
   QuickPickHex.runSequence(qp, steps, {
     loop: true,
     reducedMotion: async function (q) {
-      q.hex.setIcon(1, "windowsTerminal"); q.hex.setIcon(2, "visualStudio"); q.hex.setIcon(3, "snippet");
-      q.hex.setIcon(4, "hotkey"); q.hex.setIcon(6, "script");
+      q.hex.setIcon(1, "windowsTerminal"); q.hex.setIcon(2, "visualStudio"); q.hex.setIcon(3, "hotkey");
+      q.hex.setIcon(4, "spotify"); q.hex.setIcon(6, "script");
       var full = [
         [7, "abletonLive"], [8, "slack"], [9, "photoshop"], [10, "msTeams"], [11, "chrome"],
         [12, "notion"], [13, "outlook"], [14, "excel"], [15, "obsStudio"],
-        [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
+        [16, "fileExplorer"], [17, "settingsGear"], [18, "discordApp"]
       ];
       full.forEach(function (pair) { q.hex.setIcon(pair[0], pair[1]); showRingSlot(pair[0]); });
       q.window.show(summonX, summonY); // camera is already parked on the close shot

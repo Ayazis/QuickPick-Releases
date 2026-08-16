@@ -16,69 +16,82 @@
   body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 
   /* ── Placeholder desktop windows — Windows 11 chrome ─────────── */
+  /* Every app runs maximized, filling the desktop above the taskbar — which
+     is exactly why previews matter: with a full-screen window in front you
+     cannot see any of the others at all. Maximized windows lose the Win11
+     corner rounding and the drop shadow. */
   .qp-fakewin {
     position: absolute;
-    width: 212px; height: 134px;
-    border-radius: 8px; /* Win11 rounded corners */
+    left: 0; top: 0;
+    border-radius: 0;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, .10);
     background: #202024;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, .6), 0 2px 6px rgba(0, 0, 0, .45);
     transition: filter .45s, opacity .3s, transform .45s;
   }
-  /* focused window gets the brighter Win11 border + a deeper shadow */
-  .qp-fakewin.front { z-index: 2; border-color: rgba(255, 255, 255, .18); }
-  .qp-fakewin.back  { z-index: 1; filter: brightness(.62) saturate(.8); box-shadow: 0 10px 24px rgba(0, 0, 0, .5); }
+  .qp-fakewin.front { z-index: 2; }
+  .qp-fakewin.back  { z-index: 1; filter: brightness(.62) saturate(.8); }
   /* Aero-peek while hovering a thumbnail: peeked window comes forward,
      every other window is hidden entirely (matches ActivatePeek, which
      only shows the peeked window's live thumbnail on the desktop) */
   .qp-stage.peek .qp-fakewin:not(.peeked) { opacity: 0; }
   .qp-stage.peek .qp-fakewin.peeked { filter: none; }
 
-  /* The same window markup, statically sized, reused inside thumbnails */
-  .qp-fakewin-static { position: relative; width: 212px; height: 134px; background: #202024; border-radius: 8px; overflow: hidden; }
-  .qp-shot-scale { width: 212px; height: 134px; transform: scale(.548); transform-origin: 0 0; }
+  /* The same window markup, statically sized, reused inside thumbnails.
+     Both are sized inline per app, and the scale is computed to fit the
+     116x74 .qp-thumb-shot box while keeping the window's aspect ratio. */
+  .qp-fakewin-static { position: relative; background: #202024; overflow: hidden; }
+  .qp-shot-scale { transform-origin: 0 0; }
 
-  /* Win11 title bar: app icon + title on the left, caption buttons right */
-  .qp-fw-bar {
-    height: 26px;
-    background: linear-gradient(#32323a, #2b2b31); /* mica-ish title bar */
-    border-bottom: 1px solid rgba(0, 0, 0, .35);
-    display: flex; align-items: center;
-  }
-  .qp-fw-appicon { display: flex; margin-left: 8px; }
-  .qp-fw-appicon svg { width: 13px; height: 13px; }
-  .qp-fw-title {
-    flex: 1;
-    font-size: 8.5px; color: #cdcdd4;
-    margin-left: 7px; padding-right: 6px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .qp-fw-caption { display: flex; align-self: stretch; }
-  .qp-fw-cap { width: 22px; display: flex; align-items: center; justify-content: center; }
-  .qp-fw-cap svg { width: 8px; height: 8px; }
-  .qp-fw-cap line, .qp-fw-cap rect {
-    stroke: #cdcdd4; stroke-width: 1; fill: none;
-    stroke-linecap: square;
-  }
-  .qp-fw-body { position: relative; height: calc(100% - 26px); }
+  /* Title bar and body container come from qp-window.css, at its default
+     (full-size Win11) metrics — these windows are maximized. */
+
+  /* Interiors are sized for a maximized 760x678 client area. */
 
   /* browser placeholder */
-  .fwb-browser { background: #232327; padding: 8px 10px; box-sizing: border-box; }
-  .fw-addr { height: 9px; border-radius: 5px; background: #35353b; margin-bottom: 8px; }
-  .fw-hero { height: 40px; border-radius: 4px; background: linear-gradient(120deg, #0F7D80 0%, #149EA3 100%); opacity: .85; margin-bottom: 8px; }
-  .fw-line { height: 5px; border-radius: 3px; background: #3d3d44; margin-bottom: 6px; }
+  .fwb-browser { background: #232327; }
+  .fw-tabs { display: flex; gap: 6px; padding: 8px 14px 0; }
+  .fw-tab { width: 132px; height: 22px; border-radius: 6px 6px 0 0; background: #2c2c31; }
+  .fw-tab.on { background: #3a3a42; }
+  .fw-addr { height: 20px; border-radius: 10px; background: #35353b; margin: 9px 14px; }
+  .fw-page { background: #f4f5f7; height: calc(100% - 68px); padding: 26px 46px; box-sizing: border-box; }
+  .fw-hero { height: 150px; border-radius: 8px; background: linear-gradient(120deg, #0F7D80 0%, #149EA3 100%); margin-bottom: 26px; }
+  .fw-line { height: 13px; border-radius: 6px; background: #d7dae0; margin-bottom: 15px; }
 
   /* code-editor placeholder */
   .fwb-editor { background: #1b1b20; display: flex; }
-  .fw-side { width: 26px; background: #232329; }
-  .fw-code { flex: 1; padding: 9px 10px; }
-  .fw-code div { height: 5px; border-radius: 3px; margin-bottom: 7px; opacity: .75; }
+  .fw-side { width: 68px; background: #232329; }
+  .fw-code { flex: 1; padding: 26px 32px; }
+  .fw-code div { height: 13px; border-radius: 6px; margin-bottom: 20px; opacity: .75; }
+
+  /* mail placeholder: folder rail, message list, reading pane */
+  .fwb-mail { background: #1f1f24; display: flex; }
+  .fw-folders { width: 118px; background: #26262c; padding: 20px 14px; box-sizing: border-box; }
+  .fw-folder { height: 13px; border-radius: 6px; background: #3b3b45; margin-bottom: 20px; }
+  .fw-folder.on { background: #0f6cbd; }
+  .fw-list { width: 242px; background: #232329; padding: 20px 16px; box-sizing: border-box; border-right: 1px solid #2e2e36; }
+  .fw-msg { margin-bottom: 24px; }
+  .fw-msg span { display: block; height: 11px; border-radius: 5px; background: #3b3b45; margin-bottom: 9px; }
+  .fw-msg span:first-child { background: #5a5a68; width: 70%; }
+  .fw-msg.on span:first-child { background: #6fb7ff; }
+  .fw-read { flex: 1; padding: 26px 30px; }
+  .fw-read div { height: 13px; border-radius: 6px; background: #34343d; margin-bottom: 18px; }
+  .fw-read div:first-child { background: #55556a; width: 62%; height: 18px; }
+
+  /* DAW placeholder: a session clip grid over arrangement lanes. Blocks,
+     not stripes — a fine repeating pattern just turns into noise once the
+     window is scaled down into a thumbnail. */
+  .fwb-daw { background: #16161a; padding: 20px; box-sizing: border-box; }
+  .fw-clips { display: grid; grid-template-columns: repeat(8, 1fr); gap: 7px; }
+  .fw-clip { height: 26px; border-radius: 3px; background: #26262e; }
+  .fw-lanes { margin-top: 22px; }
+  .fw-lane { position: relative; height: 44px; margin-bottom: 10px; border-radius: 3px; background: #1c1c22; }
+  .fw-lane b { position: absolute; top: 8px; bottom: 8px; border-radius: 3px; display: block; }
 
   /* keep QuickPick above the placeholder windows */
   .qp-demo .qp-window { z-index: 5; }
 </style>
 <link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-window.css">
 <link rel="stylesheet" href="qp-desktop.css">
 <link rel="stylesheet" href="qp-appbar.css">
 <link rel="stylesheet" href="qp-thumbnail.css">
@@ -90,6 +103,7 @@
 <script src="qp-icons.js" defer></script>
 <script src="qp-brand-icons.js" defer></script>
 <script src="qp-core.js" defer></script>
+<script src="qp-window.js" defer></script>
 <script src="qp-desktop.js" defer></script>
 <script src="qp-appbar.js" defer></script>
 <script src="qp-thumbnail.js" defer></script>
@@ -109,43 +123,126 @@ document.addEventListener("DOMContentLoaded", function () {
     music: brand("abletonLive")
   };
 
-  /* ── Placeholder window contents (shared by desktop + thumbnails) ── */
-  var captionBtns =
-    '<div class="qp-fw-caption">' +
-      '<span class="qp-fw-cap"><svg viewBox="0 0 10 10"><line x1="1.5" y1="5" x2="8.5" y2="5"/></svg></span>' +
-      '<span class="qp-fw-cap"><svg viewBox="0 0 10 10"><rect x="1.8" y="1.8" width="6.4" height="6.4"/></svg></span>' +
-      '<span class="qp-fw-cap close"><svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></span>' +
-    '</div>';
-  function barHTML(iconSvg, title) {
-    return '<div class="qp-fw-bar">' +
-      '<span class="qp-fw-appicon">' + iconSvg + '</span>' +
-      '<span class="qp-fw-title">' + title + '</span>' +
-      captionBtns + '</div>';
-  }
-  var browserInner = barHTML(appIcons.browser, "QuickPick Docs") +
+  /* ── Placeholder window contents (shared by desktop + thumbnails) ──
+     Title bars come from qp-window.js; only the interiors are local. ── */
+  var barHTML = QpWindow.barHTML;
+  var browserInner = barHTML(appIcons.browser, "QuickPick Docs — Google Chrome") +
     '<div class="qp-fw-body fwb-browser">' +
-      '<div class="fw-addr"></div><div class="fw-hero"></div>' +
-      '<div class="fw-line" style="width:72%"></div>' +
-      '<div class="fw-line" style="width:55%"></div>' +
-      '<div class="fw-line" style="width:64%"></div>' +
+      '<div class="fw-tabs"><div class="fw-tab on"></div><div class="fw-tab"></div>' +
+        '<div class="fw-tab"></div><div class="fw-tab"></div></div>' +
+      '<div class="fw-addr"></div>' +
+      '<div class="fw-page">' +
+        '<div class="fw-hero"></div>' +
+        '<div class="fw-line" style="width:78%"></div>' +
+        '<div class="fw-line" style="width:60%"></div>' +
+        '<div class="fw-line" style="width:70%"></div>' +
+        '<div class="fw-line" style="width:52%"></div>' +
+        '<div class="fw-line" style="width:66%;margin-top:34px"></div>' +
+        '<div class="fw-line" style="width:74%"></div>' +
+        '<div class="fw-line" style="width:58%"></div>' +
+        '<div class="fw-line" style="width:41%"></div>' +
+      '</div>' +
     '</div>';
-  var editorInner = barHTML(appIcons.editor, "main.js") +
+  var editorInner = barHTML(appIcons.editor, "main.js — Visual Studio Code") +
     '<div class="qp-fw-body fwb-editor"><div class="fw-side"></div><div class="fw-code">' +
       '<div style="width:45%;background:#7c5cff"></div>' +
-      '<div style="width:70%;background:#4ccf7a;margin-left:12px"></div>' +
-      '<div style="width:58%;background:#e5b53a;margin-left:12px"></div>' +
-      '<div style="width:36%;background:#56b6c2;margin-left:24px"></div>' +
-      '<div style="width:64%;background:#8a8a92;margin-left:12px"></div>' +
+      '<div style="width:70%;background:#4ccf7a;margin-left:28px"></div>' +
+      '<div style="width:58%;background:#e5b53a;margin-left:28px"></div>' +
+      '<div style="width:36%;background:#56b6c2;margin-left:56px"></div>' +
+      '<div style="width:52%;background:#8a8a92;margin-left:56px"></div>' +
+      '<div style="width:64%;background:#8a8a92;margin-left:28px"></div>' +
+      '<div style="width:48%;background:#4ccf7a;margin-left:28px"></div>' +
+      '<div style="width:30%;background:#e5b53a;margin-left:56px"></div>' +
       '<div style="width:28%;background:#7c5cff"></div>' +
+      '<div style="width:62%;background:#4ccf7a;margin-left:28px"></div>' +
+      '<div style="width:44%;background:#56b6c2;margin-left:56px"></div>' +
+      '<div style="width:36%;background:#8a8a92;margin-left:28px"></div>' +
     '</div></div>';
-
-  function thumbShot(inner) {
-    return '<div class="qp-shot-scale"><div class="qp-fakewin-static">' + inner + '</div></div>';
+  function msg(on) {
+    return '<div class="qp-msg' + (on ? " on" : "") + '"><span></span><span style="width:90%"></span></div>';
   }
-  var thumbData = [
-    { icon: appIcons.editor, title: "main.js — Visual Studio Code", shot: thumbShot(editorInner) },
-    { icon: appIcons.browser, title: "QuickPick Docs — Google Chrome", shot: thumbShot(browserInner) }
+  var mailInner = barHTML(appIcons.mail, "Inbox — Outlook") +
+    '<div class="qp-fw-body fwb-mail">' +
+      '<div class="fw-folders">' +
+        '<div class="fw-folder on"></div><div class="fw-folder"></div>' +
+        '<div class="fw-folder"></div><div class="fw-folder"></div>' +
+      '</div>' +
+      '<div class="fw-list">' +
+        '<div class="fw-msg on"><span></span><span style="width:88%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:76%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:92%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:68%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:84%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:72%"></span></div>' +
+        '<div class="fw-msg"><span></span><span style="width:90%"></span></div>' +
+      '</div>' +
+      '<div class="fw-read">' +
+        '<div></div><div style="width:88%"></div><div style="width:74%"></div>' +
+        '<div style="width:82%"></div><div style="width:52%"></div>' +
+        '<div style="width:79%;margin-top:30px"></div><div style="width:86%"></div>' +
+        '<div style="width:64%"></div><div style="width:48%"></div>' +
+      '</div>' +
+    '</div>';
+  var dawInner = barHTML(appIcons.music, "live-set.als — Ableton Live") +
+    '<div class="qp-fw-body fwb-daw">' +
+      '<div class="fw-clips">' +
+        '<div class="fw-clip" style="background:#f2c94c"></div><div class="fw-clip" style="background:#4ccf7a"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip" style="background:#56b6c2"></div>' +
+        '<div class="fw-clip" style="background:#e77b7b"></div><div class="fw-clip"></div>' +
+        '<div class="fw-clip" style="background:#7c5cff"></div><div class="fw-clip"></div>' +
+        '<div class="fw-clip" style="background:#4ccf7a"></div><div class="fw-clip"></div>' +
+        '<div class="fw-clip" style="background:#f2c94c"></div><div class="fw-clip" style="background:#7c5cff"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip" style="background:#56b6c2"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip"></div>' +
+        '<div class="fw-clip" style="background:#4ccf7a"></div><div class="fw-clip"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip" style="background:#e77b7b"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip" style="background:#f2c94c"></div>' +
+        '<div class="fw-clip"></div><div class="fw-clip"></div>' +
+      '</div>' +
+      '<div class="fw-lanes">' +
+        '<div class="fw-lane"><b style="left:2%;width:34%;background:#4ccf7a"></b><b style="left:44%;width:22%;background:#4ccf7a;opacity:.7"></b></div>' +
+        '<div class="fw-lane"><b style="left:8%;width:26%;background:#f2c94c"></b><b style="left:52%;width:38%;background:#f2c94c;opacity:.7"></b></div>' +
+        '<div class="fw-lane"><b style="left:2%;width:64%;background:#56b6c2"></b></div>' +
+        '<div class="fw-lane"><b style="left:30%;width:18%;background:#7c5cff"></b><b style="left:56%;width:30%;background:#7c5cff;opacity:.7"></b></div>' +
+        '<div class="fw-lane"><b style="left:12%;width:44%;background:#e77b7b"></b></div>' +
+        '<div class="fw-lane"><b style="left:2%;width:20%;background:#4ccf7a;opacity:.7"></b><b style="left:38%;width:46%;background:#4ccf7a"></b></div>' +
+        '<div class="fw-lane"><b style="left:22%;width:30%;background:#56b6c2;opacity:.7"></b></div>' +
+        '<div class="fw-lane"><b style="left:46%;width:40%;background:#f2c94c"></b></div>' +
+      '</div>' +
+    '</div>';
+
+  /* ── Every app runs maximized, so they all share one rect: the desktop
+     minus the taskbar. Four full-screen windows stacked on top of each
+     other is the situation the feature exists for — whatever is in front
+     hides the other three completely, so the only way to see them is to
+     preview them. ── */
+  var WORK = { w: 760, h: 710 }; // world is 760x740, taskbar is the bottom 30
+
+  /* Bar order is chosen so one straight left-to-right pass tells the whole
+     story: start in the editor, peek Outlook halfway along, finish on
+     Chrome and switch to it. No doubling back. */
+  var APPS = [
+    { icon: appIcons.editor,  title: "main.js — Visual Studio Code",   inner: editorInner },
+    { icon: appIcons.mail,    title: "Inbox — Outlook",                inner: mailInner },
+    { icon: appIcons.music,   title: "live-set.als — Ableton Live",    inner: dawInner },
+    { icon: appIcons.browser, title: "QuickPick Docs — Google Chrome", inner: browserInner }
   ];
+
+  var THUMB_W = 116, THUMB_H = 74; // .qp-thumb-shot
+  /* Scale the window shot to fit the thumbnail box without distorting it,
+     and center what's left over — the way a real window preview letterboxes. */
+  function thumbShot(app) {
+    var s = Math.min(THUMB_W / WORK.w, THUMB_H / WORK.h);
+    var left = (THUMB_W - WORK.w * s) / 2, top = (THUMB_H - WORK.h * s) / 2;
+    return '<div class="qp-shot-scale" style="width:' + WORK.w + "px;height:" + WORK.h +
+      "px;transform:translate(" + left.toFixed(1) + "px," + top.toFixed(1) + "px) scale(" + s.toFixed(4) + ')">' +
+      '<div class="qp-fakewin-static" style="width:' + WORK.w + "px;height:" + WORK.h + 'px">' + app.inner + "</div></div>";
+  }
+  /* One entry per app-bar slot, in the same order — every app on the bar is
+     running, so every one of them previews. */
+  var thumbData = APPS.map(function (a) {
+    return { icon: a.icon, title: a.title, shot: thumbShot(a) };
+  });
 
   /* ── Engine instance: hex menu + app bar (running apps underlined) ──
      Opens wide on the desktop — QuickPick summons at its real, small size
@@ -166,11 +263,11 @@ document.addEventListener("DOMContentLoaded", function () {
     stageHeight: 370,
     world: WORLD,
     camera: OVERVIEW,
-    appBar: { apps: [
+    appBar: { apps: [ // same order as APPS below
       { run: true, icon: appIcons.editor },
-      { run: true, icon: appIcons.browser },
-      { run: false, icon: appIcons.mail },
-      { run: false, icon: appIcons.music }
+      { run: true, icon: appIcons.mail },
+      { run: true, icon: appIcons.music },
+      { run: true, icon: appIcons.browser }
     ] }
   });
 
@@ -188,24 +285,27 @@ document.addEventListener("DOMContentLoaded", function () {
     ]
   });
 
-  /* ── Two placeholder app windows, between the desktop and QuickPick ── */
-  function makeWin(x, y, inner, focusClass) {
+  /* ── Four placeholder app windows, between the desktop and QuickPick,
+     cascaded the way a real desktop ends up by mid-afternoon. World
+     coordinates: the visible close-up frame is the middle 380x370 of the
+     760x740 desktop, so x 190-570 / y 185-555 is what the camera holds. ── */
+  function makeWin(app) {
     var el = document.createElement("div");
-    el.className = "qp-fakewin " + focusClass;
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-    el.innerHTML = inner;
+    el.className = "qp-fakewin back";
+    el.style.width = WORK.w + "px";
+    el.style.height = WORK.h + "px";
+    el.innerHTML = app.inner;
     qp.stage.insertBefore(el, desktop.nextSibling);
     return el;
   }
-  // World coordinates — the old 380x370 frame is the middle of the 760x740
-  // desktop, so these are the old points + (190, 185).
-  var winBrowser = makeWin(210, 230, browserInner, "back");
-  var winEditor = makeWin(338, 280, editorInner, "front");
+  var wins = APPS.map(makeWin); // same order as the app bar
 
-  function focus(winEl, otherEl) {
-    winEl.classList.remove("back"); winEl.classList.add("front");
-    otherEl.classList.remove("front"); otherEl.classList.add("back");
+  /* Raise one window to the front; everything else drops back. */
+  function focus(i) {
+    wins.forEach(function (el, n) {
+      el.classList.toggle("front", n === i);
+      el.classList.toggle("back", n !== i);
+    });
   }
 
   var thumb = QpThumbnail.build(qp.stage);
@@ -213,16 +313,53 @@ document.addEventListener("DOMContentLoaded", function () {
   var summonX = 380, summonY = 290;
   var entryX = 235, entryY = 515;
 
-  /* Hover app-bar item i and (after the real app's short delay) show its
-     window thumbnail. */
+  /* Hover app-bar item i and show its window preview.
+
+     The wait only applies to the first icon you land on: that's
+     _showThumbnailsTimer, the short delay before previews start. Once
+     previews are up they stay up — moving along the bar swaps the preview
+     to the next window instantly, with no hide and no second delay. That
+     is what makes it feel like scanning your windows rather than querying
+     them one at a time. */
+  var previewsOpen = false;
   async function hoverApp(q, i, dwellMs) {
     var c = q.appBar.center(i);
-    await q.cursor.move(c.x, c.y, 340);
+    await q.cursor.move(c.x, c.y, 300);
     q.appBar.hover(i, true);
-    await QuickPickHex.sleep(260); // _showThumbnailsTimer ≈ 250ms
+    if (!previewsOpen) {
+      await QuickPickHex.sleep(260); // _showThumbnailsTimer ≈ 250ms
+      previewsOpen = true;
+    }
     thumb.showFor(q.appBar.els[i], thumbData[i]);
     await QuickPickHex.sleep(dwellMs);
   }
+
+  /* Move one icon further along the bar. The preview never comes down —
+     it just becomes the next window. */
+  async function sweepTo(q, from, to, dwellMs) {
+    q.appBar.hover(from, false);
+    await hoverApp(q, to, dwellMs);
+  }
+
+  /* Drop onto the preview card itself: that's ActivatePeek — the previewed
+     window comes up full size on the desktop and everything else drops
+     away, so you can check it's the right one before committing. */
+  async function peekWindow(q, i, holdMs) {
+    var c = thumb.center();
+    await q.cursor.move(c.x, c.y, 280);
+    thumb.hover(true);
+    wins[i].classList.add("peeked");
+    q.stage.classList.add("peek");
+    await QuickPickHex.sleep(holdMs);
+  }
+  function endPeek(q, i) {
+    thumb.hover(false);
+    q.stage.classList.remove("peek");
+    wins[i].classList.remove("peeked");
+  }
+
+  var PEEK_AT = 1;   // Outlook — peeked halfway along, then left behind
+  var SWITCH_TO = 3; // Chrome — last icon on the bar, and the one it opens
 
   var steps = [
     // reset state at the top of every loop
@@ -230,10 +367,10 @@ document.addEventListener("DOMContentLoaded", function () {
         q.win.classList.remove("shown", "hiding");
         for (var i = 0; i < 4; i++) q.appBar.hover(i, false);
         thumb.hide();
+        previewsOpen = false;
         q.stage.classList.remove("peek");
-        winBrowser.classList.remove("peeked");
-        winBrowser.style.transform = "";
-        focus(winEditor, winBrowser);
+        wins.forEach(function (el) { el.classList.remove("peeked"); el.style.transform = ""; });
+        focus(0); // the editor is what you were working in
         q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom); // back to the wide shot
       } },
 
@@ -255,43 +392,41 @@ document.addEventListener("DOMContentLoaded", function () {
     { fn: async function (q) { await q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM, 900); } },
     { sleep: 200 },
 
-    // 4. hover the editor icon → its window thumbnail appears
-    { fn: async function (q) { await hoverApp(q, 0, 850); } },
+    // 4. sweep the cursor along the bar, left to right. The first icon
+    //    brings previews up; after that each one swaps in as the cursor
+    //    reaches it, which is the whole pitch — you find the window by
+    //    looking, not by cycling alt-tab and hoping.
+    { fn: async function (q) { await hoverApp(q, 0, 700); } },
+    { fn: async function (q) { await sweepTo(q, 0, PEEK_AT, 620); } },
 
-    // 5. slide over to the browser icon → thumbnail swaps to that window
+    // 5. drop onto the Outlook preview → peek it full-screen, then carry on
+    //    along the bar: this is the "check before you commit" beat, and it
+    //    also proves the preview is a live window, not a picture
     { fn: async function (q) {
-        q.appBar.hover(0, false);
-        thumb.hide();
-        await hoverApp(q, 1, 550);
+        await peekWindow(q, PEEK_AT, 1000);
+        endPeek(q, PEEK_AT);
       } },
 
-    // 6. move onto the thumbnail → peek: the browser window comes forward,
-    //    everything else fades (ActivatePeek)
-    { fn: async function (q) {
-        var c = thumb.center();
-        await q.cursor.move(c.x, c.y, 300);
-        thumb.hover(true);
-        winBrowser.classList.add("peeked");
-        q.stage.classList.add("peek");
-        await QuickPickHex.sleep(850);
-      } },
+    // 6. back up to the bar and finish the pass
+    { fn: async function (q) { await sweepTo(q, PEEK_AT, 2, 640); } },
+    { fn: async function (q) { await sweepTo(q, 2, SWITCH_TO, 700); } },
 
-    // 7. click the thumbnail → switch to the browser: QuickPick hides,
-    //    the browser window takes focus
+    // 7. peek the last one too — this is the window we actually want
+    { fn: async function (q) { await peekWindow(q, SWITCH_TO, 850); } },
+
+    // 8. click the preview → switch: QuickPick hides and Chrome takes focus
     { fn: async function (q) {
         await q.cursor.click();
         thumb.hide();
-        q.appBar.hover(1, false);
+        q.appBar.hover(SWITCH_TO, false);
         q.stage.classList.remove("peek");
-        winBrowser.classList.remove("peeked");
+        wins[SWITCH_TO].classList.remove("peeked");
         q.window.hide();
-        focus(winBrowser, winEditor);
-        winBrowser.style.transform = "scale(1.04)";
+        focus(SWITCH_TO);
         await QuickPickHex.sleep(240);
-        winBrowser.style.transform = "";
       } },
 
-    // 8. pull back out to the whole desktop, browser now in front, and hold
+    // 9. pull back out to the whole desktop, Chrome now in front, and hold
     //    there — the payoff shot — before the loop restarts
     { fn: async function (q) {
         await Promise.all([
@@ -307,8 +442,9 @@ document.addEventListener("DOMContentLoaded", function () {
     reducedMotion: async function (q) {
       q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM); // no camera move: hold the close shot
       q.window.show(summonX, summonY);
-      q.appBar.hover(1, true);
-      thumb.showFor(q.appBar.els[1], thumbData[1]);
+      focus(0);
+      q.appBar.hover(SWITCH_TO, true);
+      thumb.showFor(q.appBar.els[SWITCH_TO], thumbData[SWITCH_TO]);
       var c = thumb.center();
       q.cursor.place(c.x + 20, c.y - 10);
     }

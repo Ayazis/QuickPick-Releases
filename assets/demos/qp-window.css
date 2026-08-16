@@ -1,0 +1,51 @@
+/* QuickPick hex-menu demo — Windows 11 window chrome.
+   Shared by any demo that needs a stand-in desktop window: the title bar
+   (app icon + title + caption buttons) and the body container the demo
+   fills with its own placeholder interior. Include after qp-core.css.
+
+   The chrome is sized by custom properties rather than fixed pixels,
+   because demos need it at different scales: quickpick-appswitch runs
+   maximized 760x710 windows and wants the real Win11 metrics, while
+   quickpick-percontext holds a 330x240 floating window where a 32px title
+   bar would swallow the interior. Every property below falls back to the
+   full-size metric, so a window element that sets nothing still gets the
+   Win11 defaults; add .qp-fw-sm to it for the small preset. */
+
+/* Small preset — a floating window a few hundred px wide. */
+.qp-fw-sm {
+  --qp-fw-bar-h: 26px;
+  --qp-fw-icon: 14px;
+  --qp-fw-icon-gap: 8px;
+  --qp-fw-title-size: 9px;
+  --qp-fw-title-gap: 7px;
+  --qp-fw-title-pad: 6px;
+  --qp-fw-cap-w: 22px;
+  --qp-fw-cap-icon: 8px;
+}
+
+/* Win11 title bar: app icon + title on the left, caption buttons right */
+.qp-fw-bar {
+  height: var(--qp-fw-bar-h, 32px);
+  background: linear-gradient(#32323a, #2b2b31); /* mica-ish title bar */
+  border-bottom: 1px solid rgba(0, 0, 0, .35);
+  display: flex; align-items: center;
+}
+.qp-fw-appicon { display: flex; margin-left: var(--qp-fw-icon-gap, 12px); }
+.qp-fw-appicon svg { width: var(--qp-fw-icon, 16px); height: var(--qp-fw-icon, 16px); }
+.qp-fw-title {
+  flex: 1;
+  font-size: var(--qp-fw-title-size, 11px); color: #cdcdd4;
+  margin-left: var(--qp-fw-title-gap, 9px); padding-right: var(--qp-fw-title-pad, 8px);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.qp-fw-caption { display: flex; align-self: stretch; }
+.qp-fw-cap {
+  width: var(--qp-fw-cap-w, 30px);
+  display: flex; align-items: center; justify-content: center;
+}
+.qp-fw-cap svg { width: var(--qp-fw-cap-icon, 10px); height: var(--qp-fw-cap-icon, 10px); }
+.qp-fw-cap line, .qp-fw-cap rect {
+  stroke: #cdcdd4; stroke-width: 1; fill: none;
+  stroke-linecap: square;
+}
+.qp-fw-body { position: relative; height: calc(100% - var(--qp-fw-bar-h, 32px)); }

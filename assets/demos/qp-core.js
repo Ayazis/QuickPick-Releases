@@ -32,6 +32,17 @@ window.QuickPickHex = (function () {
     { c: -1, r: 0  },  // 5
     { c: 0,  r: -1 }   // 6
   ];
+  /* Ring 2 (12 more slots), in the same spiral order. Ring 2 is axial, so a
+     horizontal neighbour is r = -c/2, not r = 0: {-2,1} is 9 o'clock and
+     {2,-1} is 3 o'clock, while {-2,0} and {2,0} sit at 10 and 4 o'clock.
+     Demos that only light up some of the slots hide the rest rather than
+     drawing an empty hex — that's how two configurations end up with
+     different silhouettes and not just different icons. */
+  var RING2_CELLS = [
+    { c: -2, r: 0 }, { c: -1, r: -1 }, { c: 0, r: -2 }, { c: 1, r: -2 }, { c: 2, r: -2 }, { c: 2, r: -1 },
+    { c: 2, r: 0 },  { c: 1, r: 1 },   { c: 0, r: 2 },  { c: -1, r: 2 }, { c: -2, r: 2 }, { c: -2, r: 1 }
+  ];
+  var CELLS_R2 = DEFAULT_CELLS.concat(RING2_CELLS);
 
   function hexXY(cell, size, gap, offset) {
     var k = size / gap;
@@ -59,6 +70,74 @@ window.QuickPickHex = (function () {
     '</linearGradient>';
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+
+  /* ── Typing ──
+     Writes `text` into `el` one character at a time, in front of a blinking
+     caret it manages itself, so a demo can show QuickPick's TextWriter
+     filling a field or a console prompt.
+
+       await QuickPickHex.type(lineEl, "deploy@build-01", { ms: 34 });
+       await QuickPickHex.type(lineEl, secret, { mask: true });
+
+     `mask` swaps every character for a bullet — passwords in a demo should
+     never put anything credential-shaped on the page. The per-character
+     delay is jittered a little either side of `ms`, because a perfectly
+     even cadence reads as a marquee rather than as someone typing. Under
+     prefers-reduced-motion the text lands in one go. */
+  var CARET_CLASS = "qp-caret";
+
+  function caretIn(el) {
+    var c = el.querySelector("." + CARET_CLASS);
+    if (!c) {
+      c = document.createElement("span");
+      c.className = CARET_CLASS;
+      el.appendChild(c);
+    } else if (c !== el.lastChild) {
+      el.appendChild(c); // keep it trailing whatever has been typed so far
+    }
+    return c;
+  }
+
+  function type(el, text, opts) {
+    opts = opts || {};
+    text = String(text == null ? "" : text);
+    var ms = typeof opts.ms === "number" ? opts.ms : 35;
+    var mask = opts.mask ? (typeof opts.mask === "string" ? opts.mask : "•") : null;
+    var showCaret = opts.caret !== false;
+
+    var caret = showCaret ? caretIn(el) : null;
+    var node = document.createTextNode("");
+    if (caret) el.insertBefore(node, caret);
+    else el.appendChild(node);
+
+    if (prefersReducedMotion() || ms <= 0) {
+      node.nodeValue = mask ? mask.repeat(text.length) : text;
+      return Promise.resolve(el);
+    }
+
+    var i = 0;
+    return (function step() {
+      if (i >= text.length) return Promise.resolve(el);
+      node.nodeValue += mask || text.charAt(i);
+      i++;
+      // ±35% around `ms`, and a beat longer after a space or a separator
+      var pause = ms * (0.65 + Math.random() * 0.7);
+      if (" @/.-_:".indexOf(text.charAt(i - 1)) >= 0) pause += ms * 0.8;
+      return sleep(pause).then(step);
+    })();
+  }
+
+  /* Drop the caret from `el` — the line is finished and the cursor has
+     moved on to the next one. */
+  function endLine(el) {
+    var c = el && el.querySelector("." + CARET_CLASS);
+    if (c) c.remove();
+    return el;
+  }
 
   // Sum offsetLeft/offsetTop up the offsetParent chain from `el` to `ancestor`
   // — gives a position in `ancestor`'s unscaled coordinate space regardless
@@ -348,8 +427,7 @@ window.QuickPickHex = (function () {
      opts: { loop: bool, reducedMotion: fn(instance) } */
   async function runSequence(instance, steps, opts) {
     opts = opts || {};
-    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced && opts.reducedMotion) {
+    if (prefersReducedMotion() && opts.reducedMotion) {
       await opts.reducedMotion(instance);
       return;
     }
@@ -383,5 +461,16 @@ window.QuickPickHex = (function () {
     } while (opts.loop);
   }
 
-  return { create: create, runSequence: runSequence, sleep: sleep, offsetRelativeTo: offsetRelativeTo };
+  return {
+    create: create,
+    runSequence: runSequence,
+    sleep: sleep,
+    offsetRelativeTo: offsetRelativeTo,
+    type: type,
+    endLine: endLine,
+    prefersReducedMotion: prefersReducedMotion,
+    DEFAULT_CELLS: DEFAULT_CELLS,
+    RING2_CELLS: RING2_CELLS,
+    CELLS_R2: CELLS_R2
+  };
 })();

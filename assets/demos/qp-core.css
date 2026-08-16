@@ -84,6 +84,26 @@
 .qp-hex .qp-icon svg { width: 100%; height: 100%; display: block; }
 .qp-hex.hover .qp-icon { color: #d3d3d3; }
 
+/* ── Typing caret (QuickPickHex.type) ────────── */
+/* A block caret, the way a console draws one. Sized from the current font
+   so it works in a terminal body and in a text field alike. */
+.qp-caret {
+  display: inline-block;
+  width: .55em; height: 1em;
+  margin-left: .5px;
+  vertical-align: text-bottom;
+  background: currentColor;
+  opacity: .85;
+  animation: qp-caret-blink 1.06s steps(1, end) infinite;
+}
+@keyframes qp-caret-blink {
+  0%, 49% { opacity: .85; }
+  50%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qp-caret { animation: none; }
+}
+
 /* ── Cursor ──────────────────────────────────── */
 .qp-cursor {
   position: absolute;

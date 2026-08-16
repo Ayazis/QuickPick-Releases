@@ -13,13 +13,16 @@
   body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 </style>
 <link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-desktop.css">
 </head>
 <body>
 
 <div class="qp-demo" id="qpDemo"></div>
 
 <script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
 <script src="qp-core.js" defer></script>
+<script src="qp-desktop.js" defer></script>
 <script defer>
 document.addEventListener("DOMContentLoaded", function () {
 (function () {
@@ -32,6 +35,21 @@ document.addEventListener("DOMContentLoaded", function () {
     icons: QpIcons,
     stageWidth: 380,  // matches the app-switch demo's canvas so both carousel slides are the same size
     stageHeight: 370
+  });
+
+  /* Windows desktop backdrop — the brightness step below filters the whole
+     demo root, so the wallpaper dims and un-dims along with everything else. */
+  QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "abletonLive", label: "Ableton Live" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "vsCode", run: true },
+      "msTeams", "outlook", "spotify"
+    ]
   });
 
   var summonX = 190, summonY = 105; // default summon point (used by reduced-motion fallback) — matches the app-switch demo's summon point

@@ -37,13 +37,16 @@
   .qp-fly-icon svg { width: 100%; height: 100%; display: block; }
 </style>
 <link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-desktop.css">
 </head>
 <body>
 
 <div class="qp-demo" id="qpDemo"></div>
 
 <script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
 <script src="qp-core.js" defer></script>
+<script src="qp-desktop.js" defer></script>
 <script defer>
 document.addEventListener("DOMContentLoaded", function () {
 (function () {
@@ -51,11 +54,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ── Extra icons for custom-command slots, merged with the shared set.
      Every hex in the final dense (19-slot) state uses a different one of
-     these — no icon repeats within a configuration. Colored squares stand
-     in for real per-app icons (StartApplicationStep auto-extracts the
+     these — no icon repeats within a configuration. The app marks come
+     from qp-brand-icons.js: recognizable power-user apps, standing in for
+     the real per-app icons (StartApplicationStep auto-extracts the
      launched app's own icon); plain currentColor glyphs stand in for the
      other step types (hotkey, script, text snippet, settings). ── */
-  var icons = Object.assign({}, QpIcons, {
+  var icons = Object.assign({}, QpIcons, QpBrandIcons, {
     /* step-type glyphs */
     hotkey:
       '<svg viewBox="0 0 24 24" fill="currentColor">' +
@@ -77,57 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="3.5" width="12" height="3" rx="1"/>' +
         '<rect x="4" y="5.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
         '<rect x="7.5" y="10" width="9" height="1.8" rx=".5"/><rect x="7.5" y="13.5" width="9" height="1.8" rx=".5"/>' +
-        '<rect x="7.5" y="17" width="6" height="1.8" rx=".5"/></svg>',
-
-    /* colored "real app icon" placeholders — one per launched app */
-    appCode:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#2f74c0"/>' +
-        '<path d="M8 7l8 5-8 5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    appTerminal:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1c1c1c"/>' +
-        '<path d="M6.5 8.5l4 3.3-4 3.3" stroke="#3ddc63" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="12.5" y="14.6" width="6" height="1.8" rx=".5" fill="#3ddc63"/></svg>',
-    appPhoto:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f2994a"/>' +
-        '<circle cx="8.2" cy="8.2" r="1.9" fill="#fff"/><path d="M4 17l5-5.6 3.3 3.4L16 9.8l4 7.2z" fill="#fff" opacity=".95"/></svg>',
-    appCalendar:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#e5484d"/>' +
-        '<rect x="5.5" y="6" width="13" height="12" rx="1.2" fill="#fff"/>' +
-        '<rect x="5.5" y="6" width="13" height="3.4" fill="#b23237"/>' +
-        '<rect x="8" y="12" width="2.6" height="2.6" fill="#e5484d"/></svg>',
-    appChat:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#7c5cff"/>' +
-        '<path d="M6 8.5h12v6.2H10.6L7.4 17.5v-2.8H6z" fill="#fff"/></svg>',
-    appMusicApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1db954"/>' +
-        '<path d="M9 16.2V7.6l7-1.5v8.1" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="7.4" cy="16.2" r="2" fill="#fff"/><circle cx="14.4" cy="14.7" r="2" fill="#fff"/></svg>',
-    appMailApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#2f9df4"/>' +
-        '<rect x="5" y="7" width="14" height="10" rx="1.2" fill="#fff"/>' +
-        '<path d="M5.5 7.7l6.5 5 6.5-5" fill="none" stroke="#2f9df4" stroke-width="1.3"/></svg>',
-    appBrowserApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1a73e8"/>' +
-        '<circle cx="12" cy="12" r="6.4" fill="none" stroke="#fff" stroke-width="1.4"/>' +
-        '<ellipse cx="12" cy="12" rx="2.6" ry="6.4" fill="none" stroke="#fff" stroke-width="1.2"/>' +
-        '<path d="M6 10h12M6 14h12" stroke="#fff" stroke-width="1.2"/></svg>',
-    appNotesApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f2c94c"/>' +
-        '<rect x="6" y="6" width="12" height="1.8" rx=".5" fill="#7a5c12"/>' +
-        '<rect x="6" y="10" width="12" height="1.8" rx=".5" fill="#7a5c12"/>' +
-        '<rect x="6" y="14" width="7.5" height="1.8" rx=".5" fill="#7a5c12"/></svg>',
-    appCalcApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#5f6368"/>' +
-        '<rect x="5.5" y="5" width="13" height="4" rx="1" fill="#c9cdd1"/>' +
-        '<circle cx="7.6" cy="12.3" r="1.3" fill="#fff"/><circle cx="12" cy="12.3" r="1.3" fill="#fff"/><circle cx="16.4" cy="12.3" r="1.3" fill="#fff"/>' +
-        '<circle cx="7.6" cy="16.6" r="1.3" fill="#fff"/><circle cx="12" cy="16.6" r="1.3" fill="#fff"/><circle cx="16.4" cy="16.6" r="1.3" fill="#fff"/></svg>',
-    appVideoApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#16a3a3"/>' +
-        '<rect x="4.5" y="8.5" width="10" height="7" rx="1.2" fill="#fff"/>' +
-        '<path d="M14.5 11l4.5-2.5v7L14.5 13z" fill="#fff"/></svg>',
-    appFolderApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f6a623"/>' +
-        '<path d="M5 8.5c0-.6.5-1 1-1h4l1.4 1.6H18c.6 0 1 .4 1 1v6.4c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1z" fill="#fff"/></svg>'
+        '<rect x="7.5" y="17" width="6" height="1.8" rx=".5"/></svg>'
   });
 
   /* ── Center + ring 1 (default 7) + ring 2 (12 more, start empty) ── */
@@ -147,6 +101,19 @@ document.addEventListener("DOMContentLoaded", function () {
     icons: icons,
     stageWidth: 380,
     stageHeight: 370
+  });
+
+  QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "abletonLive", label: "Ableton Live" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "vsCode", run: true },
+      "msTeams", "outlook", "spotify"
+    ]
   });
 
   var hexEls = Array.from(qp.win.querySelectorAll(".qp-hex"));
@@ -217,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 3. a few hexes become custom commands — new icons fly in, not swapped in place
     { fn: async function (q) {
-        await flyIn(q, 2, "appCode");
+        await flyIn(q, 2, "visualStudio");
         await QuickPickHex.sleep(200);
         await flyIn(q, 4, "hotkey");
         await QuickPickHex.sleep(200);
@@ -227,17 +194,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 4. a few hexes appear on the outer ring
     { fn: async function (q) {
-        await flyIn(q, 9, "appPhoto", { reveal: true });
+        await flyIn(q, 9, "photoshop", { reveal: true });
         await QuickPickHex.sleep(160);
-        await flyIn(q, 10, "appChat", { reveal: true });
+        await flyIn(q, 10, "msTeams", { reveal: true });
         await QuickPickHex.sleep(160);
-        await flyIn(q, 13, "appCalendar", { reveal: true });
+        await flyIn(q, 13, "outlook", { reveal: true });
         await QuickPickHex.sleep(500);
       } },
 
     // 5. a couple more change
     { fn: async function (q) {
-        await flyIn(q, 1, "appTerminal");
+        await flyIn(q, 1, "windowsTerminal");
         await QuickPickHex.sleep(200);
         await flyIn(q, 3, "snippet");
         await QuickPickHex.sleep(500);
@@ -247,8 +214,8 @@ document.addEventListener("DOMContentLoaded", function () {
     //    every hex showing a distinct icon; flights overlap for a cascade
     { fn: async function (q) {
         var rest = [
-          [7, "appMusicApp"], [8, "appMailApp"], [11, "appBrowserApp"], [12, "appNotesApp"],
-          [14, "appCalcApp"], [15, "appVideoApp"], [16, "appFolderApp"], [17, "settingsGear"], [18, "clipboard"]
+          [7, "abletonLive"], [8, "slack"], [11, "chrome"], [12, "notion"],
+          [14, "excel"], [15, "obsStudio"], [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
         ];
         var last;
         for (var i = 0; i < rest.length; i++) {
@@ -274,12 +241,12 @@ document.addEventListener("DOMContentLoaded", function () {
   QuickPickHex.runSequence(qp, steps, {
     loop: true,
     reducedMotion: async function (q) {
-      q.hex.setIcon(1, "appTerminal"); q.hex.setIcon(2, "appCode"); q.hex.setIcon(3, "snippet");
+      q.hex.setIcon(1, "windowsTerminal"); q.hex.setIcon(2, "visualStudio"); q.hex.setIcon(3, "snippet");
       q.hex.setIcon(4, "hotkey"); q.hex.setIcon(6, "script");
       var full = [
-        [7, "appMusicApp"], [8, "appMailApp"], [9, "appPhoto"], [10, "appChat"], [11, "appBrowserApp"],
-        [12, "appNotesApp"], [13, "appCalendar"], [14, "appCalcApp"], [15, "appVideoApp"],
-        [16, "appFolderApp"], [17, "settingsGear"], [18, "clipboard"]
+        [7, "abletonLive"], [8, "slack"], [9, "photoshop"], [10, "msTeams"], [11, "chrome"],
+        [12, "notion"], [13, "outlook"], [14, "excel"], [15, "obsStudio"],
+        [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
       ];
       full.forEach(function (pair) { q.hex.setIcon(pair[0], pair[1]); showRingSlot(pair[0]); });
       q.window.show(summonX, summonY);

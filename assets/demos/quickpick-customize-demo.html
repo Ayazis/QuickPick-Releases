@@ -23,6 +23,10 @@
     transform-origin: 50% 50%;
   }
   .qp-hex.qp-hex-empty { opacity: 0; transform: scale(.35); }
+  /* While the menu is hidden between loops the grid is reset in one go —
+     with the transitions off, so the outer ring snaps back to empty
+     instead of visibly collapsing into the next fade-in. */
+  .qp-window.qp-no-anim .qp-hex { transition: none; }
 
   /* Icon clone that flies in from off-canvas into its hex, standing in for
      "this slot just became something else" without an in-place swap. */
@@ -37,13 +41,16 @@
   .qp-fly-icon svg { width: 100%; height: 100%; display: block; }
 </style>
 <link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-desktop.css">
 </head>
 <body>
 
 <div class="qp-demo" id="qpDemo"></div>
 
 <script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
 <script src="qp-core.js" defer></script>
+<script src="qp-desktop.js" defer></script>
 <script defer>
 document.addEventListener("DOMContentLoaded", function () {
 (function () {
@@ -51,11 +58,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   /* ── Extra icons for custom-command slots, merged with the shared set.
      Every hex in the final dense (19-slot) state uses a different one of
-     these — no icon repeats within a configuration. Colored squares stand
-     in for real per-app icons (StartApplicationStep auto-extracts the
+     these — no icon repeats within a configuration. The app marks come
+     from qp-brand-icons.js: recognizable power-user apps, standing in for
+     the real per-app icons (StartApplicationStep auto-extracts the
      launched app's own icon); plain currentColor glyphs stand in for the
      other step types (hotkey, script, text snippet, settings). ── */
-  var icons = Object.assign({}, QpIcons, {
+  var icons = Object.assign({}, QpIcons, QpBrandIcons, {
     /* step-type glyphs */
     hotkey:
       '<svg viewBox="0 0 24 24" fill="currentColor">' +
@@ -77,57 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
       '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="3.5" width="12" height="3" rx="1"/>' +
         '<rect x="4" y="5.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
         '<rect x="7.5" y="10" width="9" height="1.8" rx=".5"/><rect x="7.5" y="13.5" width="9" height="1.8" rx=".5"/>' +
-        '<rect x="7.5" y="17" width="6" height="1.8" rx=".5"/></svg>',
-
-    /* colored "real app icon" placeholders — one per launched app */
-    appCode:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#2f74c0"/>' +
-        '<path d="M8 7l8 5-8 5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    appTerminal:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1c1c1c"/>' +
-        '<path d="M6.5 8.5l4 3.3-4 3.3" stroke="#3ddc63" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="12.5" y="14.6" width="6" height="1.8" rx=".5" fill="#3ddc63"/></svg>',
-    appPhoto:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f2994a"/>' +
-        '<circle cx="8.2" cy="8.2" r="1.9" fill="#fff"/><path d="M4 17l5-5.6 3.3 3.4L16 9.8l4 7.2z" fill="#fff" opacity=".95"/></svg>',
-    appCalendar:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#e5484d"/>' +
-        '<rect x="5.5" y="6" width="13" height="12" rx="1.2" fill="#fff"/>' +
-        '<rect x="5.5" y="6" width="13" height="3.4" fill="#b23237"/>' +
-        '<rect x="8" y="12" width="2.6" height="2.6" fill="#e5484d"/></svg>',
-    appChat:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#7c5cff"/>' +
-        '<path d="M6 8.5h12v6.2H10.6L7.4 17.5v-2.8H6z" fill="#fff"/></svg>',
-    appMusicApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1db954"/>' +
-        '<path d="M9 16.2V7.6l7-1.5v8.1" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="7.4" cy="16.2" r="2" fill="#fff"/><circle cx="14.4" cy="14.7" r="2" fill="#fff"/></svg>',
-    appMailApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#2f9df4"/>' +
-        '<rect x="5" y="7" width="14" height="10" rx="1.2" fill="#fff"/>' +
-        '<path d="M5.5 7.7l6.5 5 6.5-5" fill="none" stroke="#2f9df4" stroke-width="1.3"/></svg>',
-    appBrowserApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#1a73e8"/>' +
-        '<circle cx="12" cy="12" r="6.4" fill="none" stroke="#fff" stroke-width="1.4"/>' +
-        '<ellipse cx="12" cy="12" rx="2.6" ry="6.4" fill="none" stroke="#fff" stroke-width="1.2"/>' +
-        '<path d="M6 10h12M6 14h12" stroke="#fff" stroke-width="1.2"/></svg>',
-    appNotesApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f2c94c"/>' +
-        '<rect x="6" y="6" width="12" height="1.8" rx=".5" fill="#7a5c12"/>' +
-        '<rect x="6" y="10" width="12" height="1.8" rx=".5" fill="#7a5c12"/>' +
-        '<rect x="6" y="14" width="7.5" height="1.8" rx=".5" fill="#7a5c12"/></svg>',
-    appCalcApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#5f6368"/>' +
-        '<rect x="5.5" y="5" width="13" height="4" rx="1" fill="#c9cdd1"/>' +
-        '<circle cx="7.6" cy="12.3" r="1.3" fill="#fff"/><circle cx="12" cy="12.3" r="1.3" fill="#fff"/><circle cx="16.4" cy="12.3" r="1.3" fill="#fff"/>' +
-        '<circle cx="7.6" cy="16.6" r="1.3" fill="#fff"/><circle cx="12" cy="16.6" r="1.3" fill="#fff"/><circle cx="16.4" cy="16.6" r="1.3" fill="#fff"/></svg>',
-    appVideoApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#16a3a3"/>' +
-        '<rect x="4.5" y="8.5" width="10" height="7" rx="1.2" fill="#fff"/>' +
-        '<path d="M14.5 11l4.5-2.5v7L14.5 13z" fill="#fff"/></svg>',
-    appFolderApp:
-      '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#f6a623"/>' +
-        '<path d="M5 8.5c0-.6.5-1 1-1h4l1.4 1.6H18c.6 0 1 .4 1 1v6.4c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1z" fill="#fff"/></svg>'
+        '<rect x="7.5" y="17" width="6" height="1.8" rx=".5"/></svg>'
   });
 
   /* ── Center + ring 1 (default 7) + ring 2 (12 more, start empty) ── */
@@ -141,12 +99,44 @@ document.addEventListener("DOMContentLoaded", function () {
   ].concat(RING2_CELLS);
   var RING2_START = 7; // index of the first ring-2 slot
 
+  /* Unlike the other slides this one never plays the summon or the camera
+     push-in — the system-controls slide already establishes those — so it
+     opens and stays on the close shot, with the desktop visible around the
+     menu. Same world geometry as the others, just parked at the close
+     framing (a touch below the summon point, so the menu sits in the upper
+     half of the frame). */
+  var WORLD = { width: 760, height: 740 };
+  var CLOSEUP_ZOOM = 1;
+  var CLOSEUP_DROP = 80;
+  var summonX = 380, summonY = 290; // world coords: the old 380x370 frame + (190, 185)
+
   var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
     cells: cells,
     bindings: DEFAULT_BINDINGS, // ring-2 slots (7-18) render with no icon until "added"
     icons: icons,
     stageWidth: 380,
-    stageHeight: 370
+    stageHeight: 370,
+    world: WORLD,
+    camera: { x: summonX, y: summonY + CLOSEUP_DROP, zoom: CLOSEUP_ZOOM }
+  });
+
+  /* Nothing on this slide is clicked, so the simulated cursor and the
+     hotkey prompt both stay out of the way. */
+  var hotkeyChip = qp.root.querySelector(".qp-hotkey");
+  hotkeyChip.classList.add("hidden");
+  qp.stage.querySelector(".qp-cursor").style.display = "none";
+
+  QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "abletonLive", label: "Ableton Live" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "vsCode", run: true },
+      "msTeams", "outlook", "spotify"
+    ]
   });
 
   var hexEls = Array.from(qp.win.querySelectorAll(".qp-hex"));
@@ -162,8 +152,10 @@ document.addEventListener("DOMContentLoaded", function () {
   function flyIn(q, i, iconName, opts) {
     opts = opts || {};
     var target = q.hex.center(i);
-    var stageW = q.stage.offsetWidth || 380;
-    var startX = target.x < stageW / 2 ? -30 : stageW + 30;
+    // just outside whichever edge of the *visible* frame is nearer, so the
+    // flight length stays the same however the camera is framed
+    var view = q.camera.frame();
+    var startX = target.x < view.x + view.width / 2 ? view.x - 30 : view.x + view.width + 30;
 
     var el = document.createElement("div");
     el.className = "qp-fly-icon";
@@ -188,36 +180,45 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  var summonX = 190, summonY = 105;
-  var entryX = 45, entryY = 330;
-
   var steps = [
-    // reset state at the top of every loop (menu is hidden while this runs)
+    // Reset for the next loop. This demo deliberately skips the summon and
+    // the camera push-in — the system-controls slide before it already
+    // shows how the menu is called up, so this one opens straight on the
+    // menu and spends its whole runtime on the customization itself. The
+    // menu fades out and back in to mark the loop instead.
     { fn: async function (q) {
-        q.win.classList.remove("shown", "hiding");
+        hotkeyChip.classList.add("hidden"); // no "Ctrl + Space" prompt on this slide
+        if (q.win.classList.contains("shown")) {
+          q.window.hide();
+          // .qp-window.hiding fades over 550ms — the grid must not be
+          // touched until that has finished, or you watch the dense menu
+          // unwind on its way out
+          await QuickPickHex.sleep(620);
+        }
+
+        // now invisible: snap everything back to the default 7
+        q.win.classList.add("qp-no-anim");
         q.stage.querySelectorAll(".qp-fly-icon").forEach(function (el) { el.remove(); });
         for (var i = 0; i < DEFAULT_BINDINGS.length; i++) q.hex.hover(i, false);
         q.hex.setIcon(1, "minimize"); q.hex.setIcon(2, "forward"); q.hex.setIcon(3, "play");
         q.hex.setIcon(4, "backward"); q.hex.setIcon(5, "volume"); q.hex.setIcon(6, "adjust");
         for (var r = RING2_START; r < cells.length; r++) { hideRingSlot(r); q.hex.hover(r, false); q.hex.setIcon(r, ""); }
+        void q.win.offsetWidth; // flush the snap before transitions come back
+        q.win.classList.remove("qp-no-anim");
+        await QuickPickHex.sleep(220);
       } },
 
-    // 1. cursor wanders in
-    { fn: async function (q) { q.cursor.place(entryX, entryY); await QuickPickHex.sleep(300); } },
-    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 550 },
-    { sleep: 150 },
-
-    // 2. hotkey press → summon the default menu, let it register
+    // 1. the default menu fades in, already framed
     { fn: async function (q) {
-        summonX = q.cursor.x + 8; summonY = q.cursor.y + 10;
-        await q.hotkey.press();
+        q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM);
         q.window.show(summonX, summonY);
+        hotkeyChip.classList.add("hidden");
+        await QuickPickHex.sleep(750);
       } },
-    { sleep: 700 },
 
-    // 3. a few hexes become custom commands — new icons fly in, not swapped in place
+    // 2. a few hexes become custom commands — new icons fly in, not swapped in place
     { fn: async function (q) {
-        await flyIn(q, 2, "appCode");
+        await flyIn(q, 2, "visualStudio");
         await QuickPickHex.sleep(200);
         await flyIn(q, 4, "hotkey");
         await QuickPickHex.sleep(200);
@@ -225,30 +226,30 @@ document.addEventListener("DOMContentLoaded", function () {
         await QuickPickHex.sleep(500);
       } },
 
-    // 4. a few hexes appear on the outer ring
+    // 3. a few hexes appear on the outer ring
     { fn: async function (q) {
-        await flyIn(q, 9, "appPhoto", { reveal: true });
+        await flyIn(q, 9, "photoshop", { reveal: true });
         await QuickPickHex.sleep(160);
-        await flyIn(q, 10, "appChat", { reveal: true });
+        await flyIn(q, 10, "msTeams", { reveal: true });
         await QuickPickHex.sleep(160);
-        await flyIn(q, 13, "appCalendar", { reveal: true });
+        await flyIn(q, 13, "outlook", { reveal: true });
         await QuickPickHex.sleep(500);
       } },
 
-    // 5. a couple more change
+    // 4. a couple more change
     { fn: async function (q) {
-        await flyIn(q, 1, "appTerminal");
+        await flyIn(q, 1, "windowsTerminal");
         await QuickPickHex.sleep(200);
         await flyIn(q, 3, "snippet");
         await QuickPickHex.sleep(500);
       } },
 
-    // 6. the rest of the outer ring fills in — full 19-hex "power user" menu,
+    // 5. the rest of the outer ring fills in — full 19-hex "power user" menu,
     //    every hex showing a distinct icon; flights overlap for a cascade
     { fn: async function (q) {
         var rest = [
-          [7, "appMusicApp"], [8, "appMailApp"], [11, "appBrowserApp"], [12, "appNotesApp"],
-          [14, "appCalcApp"], [15, "appVideoApp"], [16, "appFolderApp"], [17, "settingsGear"], [18, "clipboard"]
+          [7, "abletonLive"], [8, "slack"], [11, "chrome"], [12, "notion"],
+          [14, "excel"], [15, "obsStudio"], [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
         ];
         var last;
         for (var i = 0; i < rest.length; i++) {
@@ -259,31 +260,24 @@ document.addEventListener("DOMContentLoaded", function () {
         await QuickPickHex.sleep(500);
       } },
 
-    // 7. hold the full, dense menu so it registers
+    // 6. hold the full, dense menu so it registers
     { sleep: 1100 },
 
-    // 8. cursor drifts off, click outside → menu hides, loop resets
-    { fn: async function (q) {
-        await q.cursor.move(entryX, entryY, 450);
-        await q.cursor.click();
-        q.window.hide();
-      } },
-    { sleep: 900 }
+    { sleep: 400 }
   ];
 
   QuickPickHex.runSequence(qp, steps, {
     loop: true,
     reducedMotion: async function (q) {
-      q.hex.setIcon(1, "appTerminal"); q.hex.setIcon(2, "appCode"); q.hex.setIcon(3, "snippet");
+      q.hex.setIcon(1, "windowsTerminal"); q.hex.setIcon(2, "visualStudio"); q.hex.setIcon(3, "snippet");
       q.hex.setIcon(4, "hotkey"); q.hex.setIcon(6, "script");
       var full = [
-        [7, "appMusicApp"], [8, "appMailApp"], [9, "appPhoto"], [10, "appChat"], [11, "appBrowserApp"],
-        [12, "appNotesApp"], [13, "appCalendar"], [14, "appCalcApp"], [15, "appVideoApp"],
-        [16, "appFolderApp"], [17, "settingsGear"], [18, "clipboard"]
+        [7, "abletonLive"], [8, "slack"], [9, "photoshop"], [10, "msTeams"], [11, "chrome"],
+        [12, "notion"], [13, "outlook"], [14, "excel"], [15, "obsStudio"],
+        [16, "fileExplorer"], [17, "settingsGear"], [18, "clipboard"]
       ];
       full.forEach(function (pair) { q.hex.setIcon(pair[0], pair[1]); showRingSlot(pair[0]); });
-      q.window.show(summonX, summonY);
-      q.cursor.place(entryX, entryY);
+      q.window.show(summonX, summonY); // camera is already parked on the close shot
     }
   });
 })();

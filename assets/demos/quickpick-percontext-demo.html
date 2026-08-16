@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickPick — hex menu demo (per-app configurations)</title>
+<!-- QuickPick hex-menu landing-page demo: per-app configurations.
+     The same hotkey, pressed at the same spot, in two different apps —
+     and the menu comes up with a different set of actions each time
+     (browser actions in Chrome, editing actions in Photoshop), with the
+     focused app's own icon in the center hex. Deliberately no camera
+     moves: the earlier slides establish the summon and the push-in, so
+     this one holds one framing and spends its runtime on the swap. Built
+     on the shared qp-core engine — see qp-core.js/qp-core.css/
+     qp-icons.js/qp-brand-icons.js/qp-desktop.js. -->
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0b0d; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+  /* ── The focused app window — Win11 chrome, two of them stacked in the
+        same rect, cross-faded when the "active app" changes ── */
+  .qp-app-win {
+    position: absolute;
+    left: 215px; top: 225px;
+    width: 330px; height: 240px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: #202024;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, .62), 0 2px 6px rgba(0, 0, 0, .45);
+    opacity: 0;
+    transform: scale(.985);
+    z-index: 1;
+    /* Both windows occupy the same rect, so the active one has to be
+       raised above the other — without this the outgoing window paints on
+       top while it fades and you briefly see one app's menu over the other
+       app's title bar. The outgoing window also drops out faster than the
+       incoming one arrives, so there's no ghosted double image. */
+    transition: opacity .16s ease-in, transform .16s ease-in;
+  }
+  .qp-app-win.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 2;
+    transition: opacity .3s ease-out .08s, transform .38s cubic-bezier(.34,1.56,.64,1) .08s;
+  }
+
+  .qp-fw-bar {
+    height: 26px;
+    background: linear-gradient(#32323a, #2b2b31);
+    border-bottom: 1px solid rgba(0, 0, 0, .35);
+    display: flex; align-items: center;
+  }
+  .qp-fw-appicon { display: flex; margin-left: 8px; }
+  .qp-fw-appicon svg { width: 14px; height: 14px; }
+  .qp-fw-title {
+    flex: 1;
+    font-size: 9px; color: #cdcdd4;
+    margin-left: 7px; padding-right: 6px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .qp-fw-caption { display: flex; align-self: stretch; }
+  .qp-fw-cap { width: 22px; display: flex; align-items: center; justify-content: center; }
+  .qp-fw-cap svg { width: 8px; height: 8px; }
+  .qp-fw-cap line, .qp-fw-cap rect { stroke: #cdcdd4; stroke-width: 1; fill: none; stroke-linecap: square; }
+  .qp-fw-body { position: relative; height: calc(100% - 26px); }
+
+  /* browser body: tab strip, address bar, page */
+  .fwb-browser { background: #232327; }
+  .fw-tabs { display: flex; gap: 4px; padding: 5px 8px 0; }
+  .fw-tab { width: 62px; height: 13px; border-radius: 4px 4px 0 0; background: #2c2c31; }
+  .fw-tab.on { background: #3a3a42; }
+  .fw-toolbar { padding: 6px 8px; }
+  .fw-addr { height: 11px; border-radius: 6px; background: #35353b; }
+  .fw-page { background: #f4f5f7; height: calc(100% - 43px); padding: 9px 11px; box-sizing: border-box; }
+  .fw-hero { height: 46px; border-radius: 5px; background: linear-gradient(120deg, #0F7D80 0%, #149EA3 100%); margin-bottom: 9px; }
+  .fw-line { height: 6px; border-radius: 3px; background: #d7dae0; margin-bottom: 7px; }
+
+  /* photo-editor body: tool rail, canvas with an image, layers panel */
+  .fwb-editor { background: #1e1e22; display: flex; }
+  .fw-tools { width: 22px; background: #26262c; padding-top: 6px; }
+  .fw-tool { width: 10px; height: 10px; margin: 0 auto 6px; border-radius: 2px; background: #4a4a55; }
+  .fw-tool.on { background: #31a8ff; }
+  .fw-canvas { flex: 1; display: flex; align-items: center; justify-content: center; background: #141418; }
+  .fw-art {
+    width: 82%; height: 76%;
+    border-radius: 2px;
+    background:
+      radial-gradient(60% 70% at 28% 34%, #ffd166 0%, rgba(255,209,102,0) 60%),
+      radial-gradient(70% 60% at 74% 68%, #ef476f 0%, rgba(239,71,111,0) 62%),
+      linear-gradient(140deg, #3a1c71 0%, #1f6f8b 100%);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+  }
+  .fw-layers { width: 52px; background: #26262c; padding: 6px 5px; box-sizing: border-box; }
+  .fw-layer { height: 9px; border-radius: 2px; background: #3a3a44; margin-bottom: 5px; }
+  .fw-layer.on { background: #31a8ff; opacity: .75; }
+
+  /* ── Caption naming the app the menu was summoned in ── */
+  .qp-caption {
+    position: absolute;
+    top: 80%; left: 50%; /* clear of the app window, which ends around 76% */
+    transform: translateX(-50%);
+    z-index: 8;
+    display: flex; align-items: center; gap: 7px;
+    padding: 5px 12px 5px 6px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 999px;
+    background: rgba(12, 14, 20, .78);
+    backdrop-filter: blur(10px);
+    color: #eaf2ff;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity .35s ease-out;
+    pointer-events: none;
+  }
+  .qp-caption.shown { opacity: 1; }
+  .qp-caption-icon { display: flex; }
+  .qp-caption-icon svg { width: 17px; height: 17px; display: block; }
+
+  /* keep QuickPick above the app window */
+  .qp-demo .qp-window { z-index: 5; }
+
+  /* Slots a configuration doesn't use aren't rendered at all — that's how
+     the two configs differ in shape, not just in icons. */
+  .qp-hex {
+    transition: opacity .35s ease-out, transform .35s cubic-bezier(.34,1.56,.64,1);
+    transform-origin: 50% 50%;
+  }
+  .qp-hex.qp-hex-empty { opacity: 0; transform: scale(.35); }
+</style>
+<link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-desktop.css">
+</head>
+<body>
+
+<div class="qp-demo" id="qpDemo"></div>
+
+<script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
+<script src="qp-core.js" defer></script>
+<script src="qp-desktop.js" defer></script>
+<script defer>
+document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  "use strict";
+
+  /* ── Per-config action glyphs. White currentColor line art, like the rest
+     of the app's command icons — colour in a hex means "this is an
+     application", nothing else. Every glyph here has to be readable at
+     13px with no second guess: a plus, a star, a key, an @, a brush, a
+     "T". Anything that needed explaining (a sparkle, a swatch trio, a
+     rotated-square eraser) is out. ── */
+  var actionIcons = {
+    /* Chrome config */
+    newTab:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+        '<path d="M12 5.6v12.8M5.6 12h12.8"/></svg>',
+    bookmark:
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M12 3.6l2.5 5.1 5.6.8-4.1 4 1 5.6-5-2.7-5 2.7 1-5.6-4.1-4 5.6-.8z"/></svg>',
+    download:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 3.8v10.4M7.4 9.9l4.6 4.3 4.6-4.3M4.6 19.4h14.8"/></svg>',
+    password:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="8.4" cy="8.6" r="4.6"/>' +
+        '<path d="M11.7 11.9L20 20.2M17.2 17.4l2.1-2.1M14.6 14.8l2.1-2.1"/></svg>',
+    atSign:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<circle cx="12" cy="12" r="3.9"/>' +
+        '<path d="M15.9 8.1v5.2a2.9 2.9 0 0 0 5.1 1.9A9.4 9.4 0 1 0 17.4 19"/></svg>',
+    reload:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M19.2 12a7.2 7.2 0 1 1-2.2-5.2"/><path d="M19.6 4.2v4.6H15"/></svg>',
+
+    /* Photoshop config */
+    brush:
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M18.6 3.6a2 2 0 0 1 2.8 2.8l-7.7 7.7-2.8-2.8z"/>' +
+        '<path d="M9.4 13.2l2.4 2.4c-.6 2.5-2.3 4-4.7 4-1 0-2-.3-2.7-.7 1.1-.5 1.4-1.5 1.6-2.5.2-1.4 1-3.2 3.4-3.2z"/></svg>',
+    layers:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round">' +
+        '<path d="M12 3.4l8.6 4.5-8.6 4.5-8.6-4.5z"/><path d="M4.2 12.4L12 16.5l7.8-4.1"/>' +
+        '<path d="M4.2 16.4L12 20.5l7.8-4.1"/></svg>',
+    textTool:
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<path d="M4.6 4.2h14.8v3.2h-5.8v12.4h-3.2V7.4H4.6z"/></svg>',
+    crop:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<path d="M6.4 2.6v15H21.4"/><path d="M2.6 6.4h15v15"/></svg>',
+    undo:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M4.8 12a7.2 7.2 0 1 0 2.2-5.2"/><path d="M4.4 4.2v4.6H9"/></svg>',
+    exportFile:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M12 15.6V4.4M7.4 9l4.6-4.6L16.6 9M4.6 19.4h14.8"/></svg>'
+  };
+  var icons = Object.assign({}, QpIcons, QpBrandIcons, actionIcons);
+
+  /* ── The grid every configuration is drawn on: center, ring 1 (6), then
+     ring 2 (12). No config fills all of it — each one lights up its own
+     slots and the rest aren't rendered, so the two menus differ in size
+     and silhouette as well as in content. ── */
+  var RING2_CELLS = [
+    { c: -2, r: 0 }, { c: -1, r: -1 }, { c: 0, r: -2 }, { c: 1, r: -2 }, { c: 2, r: -2 }, { c: 2, r: -1 },
+    { c: 2, r: 0 },  { c: 1, r: 1 },   { c: 0, r: 2 },  { c: -1, r: 2 }, { c: -2, r: 2 }, { c: -2, r: 1 }
+  ];
+  var cells = [
+    { c: 0, r: 0 }, { c: 1, r: -1 }, { c: 1, r: 0 }, { c: 0, r: 1 }, { c: -1, r: 1 }, { c: -1, r: 0 }, { c: 0, r: -1 }
+  ].concat(RING2_CELLS);
+
+  /* ── The two configurations, as slot index → icon. Index 0 is the center
+     hex, which carries the focused app's own icon — the clearest signal
+     that the menu came up "inside" that app.
+
+     Chrome is a tight 7: a browser needs a handful of things fast.
+     Photoshop is 9 — the same core plus one slot out to each side, and
+     those two carry the neighbouring apps in the creative suite. Same
+     hotkey, visibly different menu. ── */
+  var CONFIGS = {
+    chrome: {
+      app: "chrome",
+      title: "QuickPick Docs — Google Chrome",
+      label: "Google Chrome",
+      slots: {
+        0: "chrome",
+        1: "newTab", 2: "bookmark", 3: "download",
+        4: "password", 5: "atSign", 6: "reload"
+      }
+    },
+    photoshop: {
+      app: "photoshop",
+      title: "hero-shot.psd — Adobe Photoshop",
+      label: "Adobe Photoshop",
+      slots: {
+        0: "photoshop",
+        1: "brush", 2: "layers", 3: "textTool", 4: "undo", 5: "crop", 6: "exportFile",
+        // Ring 2 is axial, so a horizontal neighbour is r = -c/2, not r = 0:
+        // {-2,1} is 9 o'clock and {2,-1} is 3 o'clock. ({-2,0} and {2,0}
+        // sit at 10 and 4 o'clock.)
+        18: "lightroom",  // 9 o'clock
+        12: "illustrator" // 3 o'clock
+      }
+    }
+  };
+
+  var WORLD = { width: 760, height: 740 };
+  /* The camera framing and the summon point are set independently here:
+     the shot has to hold the whole app window, while the menu wants to sit
+     lower, in the middle of the window's body rather than riding up over
+     its title bar. Both configs summon at the same point — that's the
+     claim the slide is making — so this moves them together. */
+  var FOCUS = { x: 380, y: 370, zoom: 1 };
+  var summonX = 380, summonY = 350;
+
+  var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
+    cells: cells,
+    bindings: [], // every slot is filled in by activate() below
+    icons: icons,
+    stageWidth: 380,
+    stageHeight: 370,
+    world: WORLD,
+    camera: FOCUS
+  });
+
+  QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "abletonLive", label: "Ableton Live" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "photoshop", run: true },
+      "msTeams", "outlook", "spotify"
+    ]
+  });
+
+  /* ── The two app windows, stacked in the same rect ── */
+  var captionBtns =
+    '<div class="qp-fw-caption">' +
+      '<span class="qp-fw-cap"><svg viewBox="0 0 10 10"><line x1="1.5" y1="5" x2="8.5" y2="5"/></svg></span>' +
+      '<span class="qp-fw-cap"><svg viewBox="0 0 10 10"><rect x="1.8" y="1.8" width="6.4" height="6.4"/></svg></span>' +
+      '<span class="qp-fw-cap"><svg viewBox="0 0 10 10"><line x1="2" y1="2" x2="8" y2="8"/><line x1="8" y1="2" x2="2" y2="8"/></svg></span>' +
+    '</div>';
+  function barHTML(cfg) {
+    return '<div class="qp-fw-bar">' +
+      '<span class="qp-fw-appicon">' + icons[cfg.app] + "</span>" +
+      '<span class="qp-fw-title">' + cfg.title + "</span>" +
+      captionBtns + "</div>";
+  }
+  function makeWin(cfg, bodyHTML) {
+    var el = document.createElement("div");
+    el.className = "qp-app-win";
+    el.innerHTML = barHTML(cfg) + bodyHTML;
+    qp.stage.insertBefore(el, qp.win); // above the desktop, below QuickPick
+    return el;
+  }
+
+  var winChrome = makeWin(CONFIGS.chrome,
+    '<div class="qp-fw-body fwb-browser">' +
+      '<div class="fw-tabs"><div class="fw-tab on"></div><div class="fw-tab"></div><div class="fw-tab"></div></div>' +
+      '<div class="fw-toolbar"><div class="fw-addr"></div></div>' +
+      '<div class="fw-page">' +
+        '<div class="fw-hero"></div>' +
+        '<div class="fw-line" style="width:78%"></div>' +
+        '<div class="fw-line" style="width:62%"></div>' +
+        '<div class="fw-line" style="width:70%"></div>' +
+        '<div class="fw-line" style="width:44%"></div>' +
+      "</div>" +
+    "</div>");
+
+  var winPhotoshop = makeWin(CONFIGS.photoshop,
+    '<div class="qp-fw-body fwb-editor">' +
+      '<div class="fw-tools">' +
+        '<div class="fw-tool on"></div><div class="fw-tool"></div><div class="fw-tool"></div>' +
+        '<div class="fw-tool"></div><div class="fw-tool"></div><div class="fw-tool"></div>' +
+      "</div>" +
+      '<div class="fw-canvas"><div class="fw-art"></div></div>' +
+      '<div class="fw-layers">' +
+        '<div class="fw-layer on"></div><div class="fw-layer"></div>' +
+        '<div class="fw-layer"></div><div class="fw-layer"></div>' +
+      "</div>" +
+    "</div>");
+
+  /* ── Caption naming the app the menu was summoned in ── */
+  var captionEl = document.createElement("div");
+  captionEl.className = "qp-caption";
+  qp.root.appendChild(captionEl);
+
+  function showCaption(cfg) {
+    captionEl.innerHTML = '<span class="qp-caption-icon">' + icons[cfg.app] + "</span>" +
+      "<span>" + cfg.label + "</span>";
+    captionEl.classList.add("shown");
+  }
+  function hideCaption() { captionEl.classList.remove("shown"); }
+
+  var hexEls = Array.from(qp.win.querySelectorAll(".qp-hex"));
+
+  /* Bring `cfg`'s window to the front and load its configuration into the
+     grid: its own slots get icons, every other slot stops existing. */
+  function activate(q, cfg) {
+    (cfg === CONFIGS.chrome ? winChrome : winPhotoshop).classList.add("active");
+    (cfg === CONFIGS.chrome ? winPhotoshop : winChrome).classList.remove("active");
+    hexEls.forEach(function (el, i) {
+      var name = cfg.slots[i];
+      el.classList.toggle("qp-hex-empty", !name);
+      q.hex.setIcon(i, name || "");
+      q.hex.hover(i, false);
+    });
+  }
+
+  /* Press the hotkey over the focused app, hold the menu, then dismiss —
+     the same beat for both configs, at the same summon point, which is
+     what makes the difference between them read. */
+  async function summonIn(q, cfg, holdMs) {
+    await q.hotkey.press();
+    q.window.show(summonX, summonY);
+    showCaption(cfg);
+    await QuickPickHex.sleep(holdMs);
+    hideCaption();
+    q.window.hide();
+    await QuickPickHex.sleep(500);
+  }
+
+  var steps = [
+    // reset state at the top of every loop
+    { fn: async function (q) {
+        q.win.classList.remove("shown", "hiding");
+        hideCaption();
+        activate(q, CONFIGS.chrome);
+        q.cursor.place(summonX + 6, summonY + 8);
+        await QuickPickHex.sleep(700);
+      } },
+
+    // 1. in Chrome: the menu comes up with browser actions
+    { fn: async function (q) { await summonIn(q, CONFIGS.chrome, 2100); } },
+
+    // 2. switch to Photoshop — same desktop, same cursor, different app in
+    //    front; its config is loaded while the menu is down
+    { fn: async function (q) {
+        activate(q, CONFIGS.photoshop);
+        await QuickPickHex.sleep(900);
+      } },
+
+    // 3. same hotkey, same spot, and a completely different set of actions
+    { fn: async function (q) { await summonIn(q, CONFIGS.photoshop, 2300); } },
+    { sleep: 500 }
+  ];
+
+  QuickPickHex.runSequence(qp, steps, {
+    loop: true,
+    reducedMotion: async function (q) {
+      activate(q, CONFIGS.photoshop);
+      q.cursor.place(summonX + 6, summonY + 8);
+      q.window.show(summonX, summonY);
+      showCaption(CONFIGS.photoshop);
+    }
+  });
+})();
+});
+</script>
+</body>
+</html>

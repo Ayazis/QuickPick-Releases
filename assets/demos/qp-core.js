@@ -6,8 +6,10 @@
      var qp = QuickPickHex.create(containerEl, {
        bindings:    ["tools","minimize","forward","play","backward","volume","adjust"],
        icons:       QpIcons,
-       stageWidth:  480,             // optional — canvas size the demo animates within (default 760)
+       stageWidth:  480,             // optional — visible frame size/aspect (default 760)
        stageHeight: 320,             // optional (default 440)
+       world:       { width: 960, height: 640 }, // optional — desktop bigger than the frame, panned by the camera
+       camera:      { x: 480, y: 320, zoom: .5 }, // optional starting shot (default: frame-sized, zoom 1)
        appBar:      { apps: [...] }, // optional — needs qp-appbar.js loaded
        hotkey:      { keys: ["Ctrl","Space"] }
      });
@@ -87,6 +89,13 @@ window.QuickPickHex = (function () {
     var hotkeyKeys  = (config.hotkey && config.hotkey.keys) || ["Ctrl", "Space"];
     var stageWidth  = config.stageWidth || 760;
     var stageHeight = config.stageHeight || 440;
+    /* The "world" is the full desktop the demo lives on; stageWidth/Height
+       describe the visible frame (the panel's size and aspect). When the
+       world is bigger than the frame, the camera below pans and zooms
+       around it — a demo can open on the whole desktop (QuickPick summoned
+       small, as it really looks) and then push in on the menu. Everything
+       inside the stage — cursor included — scales with it. */
+    var world = config.world || { width: stageWidth, height: stageHeight };
 
     /* ── DOM scaffold (scoped under `container`, no shared IDs) ── */
     var demo = container;
@@ -95,8 +104,8 @@ window.QuickPickHex = (function () {
     demo.style.aspectRatio = stageWidth + " / " + stageHeight;
     var stage = document.createElement("div");
     stage.className = "qp-stage";
-    stage.style.width = stageWidth + "px";
-    stage.style.height = stageHeight + "px";
+    stage.style.width = world.width + "px";
+    stage.style.height = world.height + "px";
     demo.appendChild(stage);
 
     var hotkey = document.createElement("div");
@@ -143,10 +152,45 @@ window.QuickPickHex = (function () {
     stage.appendChild(cursorEl);
     var ripple = cursorEl.querySelector(".qp-ripple");
 
-    /* ── Responsive scale ── */
+    /* ── Responsive scale + camera ──
+       `fitScale` maps frame units to the panel's actual pixel size; the
+       camera adds a zoom around a world point, which is what the demos
+       animate. The two are composed into one transform so a resize never
+       fights an in-flight camera move. */
+    var fitScale = 1;
+    var cam = { x: world.width / 2, y: world.height / 2, zoom: 1 };
+    if (config.camera) {
+      if (typeof config.camera.zoom === "number") cam.zoom = config.camera.zoom;
+      if (typeof config.camera.x === "number") cam.x = config.camera.x;
+      if (typeof config.camera.y === "number") cam.y = config.camera.y;
+    }
+
+    function applyTransform() {
+      var k = fitScale * cam.zoom;
+      var tx = fitScale * stageWidth / 2 - k * cam.x;
+      var ty = fitScale * stageHeight / 2 - k * cam.y;
+      stage.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + k + ")";
+    }
     function fit() {
-      var s = demo.clientWidth / stageWidth;
-      stage.style.transform = "scale(" + s + ")";
+      fitScale = demo.clientWidth / stageWidth;
+      applyTransform();
+    }
+    /* Move the camera to world point (x, y) at `zoom`, over `ms`. Omitted
+       values keep their current setting; ms 0 (or omitted) snaps. */
+    function cameraTo(x, y, zoom, ms, ease) {
+      if (typeof x === "number") cam.x = x;
+      if (typeof y === "number") cam.y = y;
+      if (typeof zoom === "number") cam.zoom = zoom;
+      stage.style.transition = ms ? "transform " + ms + "ms " + (ease || "cubic-bezier(.4,0,.2,1)") : "none";
+      applyTransform();
+      return ms ? sleep(ms + 30) : Promise.resolve();
+    }
+    /* The slice of the world currently on screen, in world coordinates —
+       demos use it to fly things in from just outside the visible edge
+       whatever the camera is doing. */
+    function cameraFrame() {
+      var w = stageWidth / cam.zoom, h = stageHeight / cam.zoom;
+      return { x: cam.x - w / 2, y: cam.y - h / 2, width: w, height: h };
     }
     var ro = window.ResizeObserver ? new ResizeObserver(fit) : null;
     if (ro) ro.observe(demo);
@@ -283,6 +327,7 @@ window.QuickPickHex = (function () {
       cursor: { place: place, move: move, moveInstant: moveInstant, click: click, get x() { return cx; }, get y() { return cy; } },
       hex: { hover: hexHover, setGauge: setGauge, clearGauge: clearGauge, setIcon: setIcon, center: hexCenter },
       window: { show: showWindow, hide: hideWindow },
+      camera: { to: cameraTo, frame: cameraFrame, get zoom() { return cam.zoom; }, world: world },
       hotkey: { press: pressHotkey },
       appBar: appBarApi,
       destroy: destroy
@@ -318,6 +363,11 @@ window.QuickPickHex = (function () {
         if (s.hotkey === "press") { await instance.hotkey.press(); continue; }
         if (s.window === "show") { instance.window.show(s.at[0], s.at[1]); continue; }
         if (s.window === "hide") { instance.window.hide(); continue; }
+        if (s.camera) {
+          await instance.camera.to(s.camera.to && s.camera.to[0], s.camera.to && s.camera.to[1],
+                                   s.camera.zoom, s.camera.ms, s.camera.ease);
+          continue;
+        }
         if (typeof s.hex === "number") {
           if (typeof s.hover === "boolean") instance.hex.hover(s.hex, s.hover);
           if (s.icon) instance.hex.setIcon(s.hex, s.icon);

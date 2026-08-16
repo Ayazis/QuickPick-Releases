@@ -19,15 +19,16 @@
   .qp-fakewin {
     position: absolute;
     width: 212px; height: 134px;
-    border-radius: 3px;
+    border-radius: 8px; /* Win11 rounded corners */
     overflow: hidden;
-    border: 1px solid #3a3a40;
+    border: 1px solid rgba(255, 255, 255, .10);
     background: #202024;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, .55);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .6), 0 2px 6px rgba(0, 0, 0, .45);
     transition: filter .45s, opacity .3s, transform .45s;
   }
-  .qp-fakewin.front { z-index: 2; }
-  .qp-fakewin.back  { z-index: 1; filter: brightness(.5) saturate(.75); }
+  /* focused window gets the brighter Win11 border + a deeper shadow */
+  .qp-fakewin.front { z-index: 2; border-color: rgba(255, 255, 255, .18); }
+  .qp-fakewin.back  { z-index: 1; filter: brightness(.62) saturate(.8); box-shadow: 0 10px 24px rgba(0, 0, 0, .5); }
   /* Aero-peek while hovering a thumbnail: peeked window comes forward,
      every other window is hidden entirely (matches ActivatePeek, which
      only shows the peeked window's live thumbnail on the desktop) */
@@ -35,13 +36,14 @@
   .qp-stage.peek .qp-fakewin.peeked { filter: none; }
 
   /* The same window markup, statically sized, reused inside thumbnails */
-  .qp-fakewin-static { position: relative; width: 212px; height: 134px; background: #202024; }
+  .qp-fakewin-static { position: relative; width: 212px; height: 134px; background: #202024; border-radius: 8px; overflow: hidden; }
   .qp-shot-scale { width: 212px; height: 134px; transform: scale(.548); transform-origin: 0 0; }
 
   /* Win11 title bar: app icon + title on the left, caption buttons right */
   .qp-fw-bar {
-    height: 24px;
-    background: #2b2b31;
+    height: 26px;
+    background: linear-gradient(#32323a, #2b2b31); /* mica-ish title bar */
+    border-bottom: 1px solid rgba(0, 0, 0, .35);
     display: flex; align-items: center;
   }
   .qp-fw-appicon { display: flex; margin-left: 8px; }
@@ -59,7 +61,7 @@
     stroke: #cdcdd4; stroke-width: 1; fill: none;
     stroke-linecap: square;
   }
-  .qp-fw-body { position: relative; height: calc(100% - 24px); }
+  .qp-fw-body { position: relative; height: calc(100% - 26px); }
 
   /* browser placeholder */
   .fwb-browser { background: #232327; padding: 8px 10px; box-sizing: border-box; }
@@ -77,6 +79,7 @@
   .qp-demo .qp-window { z-index: 5; }
 </style>
 <link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-desktop.css">
 <link rel="stylesheet" href="qp-appbar.css">
 <link rel="stylesheet" href="qp-thumbnail.css">
 </head>
@@ -85,7 +88,9 @@
 <div class="qp-demo" id="qpDemo"></div>
 
 <script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
 <script src="qp-core.js" defer></script>
+<script src="qp-desktop.js" defer></script>
 <script src="qp-appbar.js" defer></script>
 <script src="qp-thumbnail.js" defer></script>
 <script defer>
@@ -93,21 +98,15 @@ document.addEventListener("DOMContentLoaded", function () {
 (function () {
   "use strict";
 
-  /* ── App icons (20x20, for the app bar and thumbnail titles) ── */
+  /* ── App icons (20x20, for the app bar and thumbnail titles) — real,
+     recognizable desktop apps from qp-brand-icons.js, rescaled to the
+     app bar's 20x20 box. ── */
+  function brand(name) { return QpAppBar.svgIcon(QpBrandIconTools.inner20(name)); }
   var appIcons = {
-    editor: QpAppBar.svgIcon(
-      '<rect x="3" y="4" width="14" height="12" rx="2" fill="#7c5cff"/>' +
-      '<path d="M7.5 8 5.5 10l2 2M12.5 8l2 2-2 2" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'),
-    browser: QpAppBar.svgIcon(
-      '<circle cx="10" cy="10" r="7" fill="#2f9df4"/>' +
-      '<ellipse cx="10" cy="10" rx="3" ry="7" fill="none" stroke="#d9f0ff" stroke-width="1"/>' +
-      '<path d="M3.4 8h13.2M3.4 12h13.2" stroke="#d9f0ff" stroke-width="1" fill="none"/>'),
-    mail: QpAppBar.svgIcon(
-      '<rect x="3" y="5" width="14" height="10" rx="1.5" fill="#e5b53a"/>' +
-      '<path d="M3.5 6l6.5 5 6.5-5" stroke="#7a5c12" stroke-width="1.2" fill="none"/>'),
-    music: QpAppBar.svgIcon(
-      '<path d="M8 15.5V6l7-1.8v9.3" stroke="#4ccf7a" stroke-width="1.6" fill="none"/>' +
-      '<circle cx="6.3" cy="15.5" r="2" fill="#4ccf7a"/><circle cx="14.8" cy="13.5" r="2" fill="#4ccf7a"/>')
+    editor: brand("vsCode"),
+    browser: brand("chrome"),
+    mail: brand("outlook"),
+    music: brand("abletonLive")
   };
 
   /* ── Placeholder window contents (shared by desktop + thumbnails) ── */
@@ -144,17 +143,29 @@ document.addEventListener("DOMContentLoaded", function () {
     return '<div class="qp-shot-scale"><div class="qp-fakewin-static">' + inner + '</div></div>';
   }
   var thumbData = [
-    { icon: appIcons.editor, title: "main.js — Code Editor", shot: thumbShot(editorInner) },
-    { icon: appIcons.browser, title: "QuickPick Docs — Browser", shot: thumbShot(browserInner) }
+    { icon: appIcons.editor, title: "main.js — Visual Studio Code", shot: thumbShot(editorInner) },
+    { icon: appIcons.browser, title: "QuickPick Docs — Google Chrome", shot: thumbShot(browserInner) }
   ];
 
-  /* ── Engine instance: hex menu + app bar (running apps underlined) ── */
+  /* ── Engine instance: hex menu + app bar (running apps underlined) ──
+     Opens wide on the desktop — QuickPick summons at its real, small size
+     next to full-size app windows — then pushes in on the menu. */
+  var WORLD = { width: 760, height: 740 };
+  var OVERVIEW = { x: 380, y: 370, zoom: 0.5 };
+  var CLOSEUP_ZOOM = 1;
+  // The close shot sits a little below the summon point, so the menu keeps
+  // its original place in the upper half of the frame and whatever hangs
+  // under it (app bar, thumbnails) still fits.
+  var CLOSEUP_DROP = 80;
+
   var bindings = ["tools", "minimize", "forward", "play", "backward", "volume", "adjust"];
   var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
     bindings: bindings,
     icons: QpIcons,
     stageWidth: 380,
     stageHeight: 370,
+    world: WORLD,
+    camera: OVERVIEW,
     appBar: { apps: [
       { run: true, icon: appIcons.editor },
       { run: true, icon: appIcons.browser },
@@ -163,18 +174,34 @@ document.addEventListener("DOMContentLoaded", function () {
     ] }
   });
 
-  /* ── Two placeholder desktop windows behind QuickPick ── */
+  /* ── Windows desktop behind it all: wallpaper, shortcuts, taskbar ── */
+  var desktop = QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "abletonLive", label: "Ableton Live" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "vsCode", run: true },
+      "msTeams", "outlook", "spotify"
+    ]
+  });
+
+  /* ── Two placeholder app windows, between the desktop and QuickPick ── */
   function makeWin(x, y, inner, focusClass) {
     var el = document.createElement("div");
     el.className = "qp-fakewin " + focusClass;
     el.style.left = x + "px";
     el.style.top = y + "px";
     el.innerHTML = inner;
-    qp.stage.insertBefore(el, qp.stage.firstChild);
+    qp.stage.insertBefore(el, desktop.nextSibling);
     return el;
   }
-  var winBrowser = makeWin(20, 45, browserInner, "back");
-  var winEditor = makeWin(148, 95, editorInner, "front");
+  // World coordinates — the old 380x370 frame is the middle of the 760x740
+  // desktop, so these are the old points + (190, 185).
+  var winBrowser = makeWin(210, 230, browserInner, "back");
+  var winEditor = makeWin(338, 280, editorInner, "front");
 
   function focus(winEl, otherEl) {
     winEl.classList.remove("back"); winEl.classList.add("front");
@@ -183,8 +210,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var thumb = QpThumbnail.build(qp.stage);
 
-  var summonX = 190, summonY = 105;
-  var entryX = 45, entryY = 330;
+  var summonX = 380, summonY = 290;
+  var entryX = 235, entryY = 515;
 
   /* Hover app-bar item i and (after the real app's short delay) show its
      window thumbnail. */
@@ -207,33 +234,38 @@ document.addEventListener("DOMContentLoaded", function () {
         winBrowser.classList.remove("peeked");
         winBrowser.style.transform = "";
         focus(winEditor, winBrowser);
+        q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom); // back to the wide shot
       } },
 
     // 1. cursor wanders in over the desktop
     { fn: async function (q) { q.cursor.place(entryX, entryY); await QuickPickHex.sleep(350); } },
-    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 550 },
+    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 650 },
     { sleep: 150 },
 
-    // 2. hotkey press → QuickPick summons at cursor, app bar shows the
-    //    running apps (underlined)
+    // 2. hotkey press → QuickPick summons at cursor, at its real size
+    //    beside the open windows; app bar shows the running apps (underlined)
     { fn: async function (q) {
         summonX = q.cursor.x + 8; summonY = q.cursor.y + 10;
         await q.hotkey.press();
         q.window.show(summonX, summonY);
       } },
-    { sleep: 650 },
+    { sleep: 700 },
 
-    // 3. hover the editor icon → its window thumbnail appears
+    // 3. push in on the menu — the cursor scales with the scene
+    { fn: async function (q) { await q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM, 900); } },
+    { sleep: 200 },
+
+    // 4. hover the editor icon → its window thumbnail appears
     { fn: async function (q) { await hoverApp(q, 0, 850); } },
 
-    // 4. slide over to the browser icon → thumbnail swaps to that window
+    // 5. slide over to the browser icon → thumbnail swaps to that window
     { fn: async function (q) {
         q.appBar.hover(0, false);
         thumb.hide();
         await hoverApp(q, 1, 550);
       } },
 
-    // 5. move onto the thumbnail → peek: the browser window comes forward,
+    // 6. move onto the thumbnail → peek: the browser window comes forward,
     //    everything else fades (ActivatePeek)
     { fn: async function (q) {
         var c = thumb.center();
@@ -244,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await QuickPickHex.sleep(850);
       } },
 
-    // 6. click the thumbnail → switch to the browser: QuickPick hides,
+    // 7. click the thumbnail → switch to the browser: QuickPick hides,
     //    the browser window takes focus
     { fn: async function (q) {
         await q.cursor.click();
@@ -259,14 +291,21 @@ document.addEventListener("DOMContentLoaded", function () {
         winBrowser.style.transform = "";
       } },
 
-    // 7. cursor drifts off; hold on the switched desktop, then loop
-    { cursor: "move", to: [entryX, entryY], ms: 500 },
-    { sleep: 1600 }
+    // 8. pull back out to the whole desktop, browser now in front, and hold
+    //    there — the payoff shot — before the loop restarts
+    { fn: async function (q) {
+        await Promise.all([
+          q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom, 750),
+          q.cursor.move(entryX, entryY, 750)
+        ]);
+      } },
+    { sleep: 1400 }
   ];
 
   QuickPickHex.runSequence(qp, steps, {
     loop: true,
     reducedMotion: async function (q) {
+      q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM); // no camera move: hold the close shot
       q.window.show(summonX, summonY);
       q.appBar.hover(1, true);
       thumb.showFor(q.appBar.els[1], thumbData[1]);

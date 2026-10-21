@@ -1,0 +1,105 @@
+/* QuickPick hex-menu demo — optional Windows-desktop backdrop.
+   Only needed by demos that call QpDesktop.build(). Sits behind everything
+   else in the stage so the hex menu and any placeholder windows read as
+   "running on a Windows desktop" rather than floating on a flat panel. */
+
+.qp-desktop {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* ── Wallpaper: an abstract Windows-style bloom, drawn entirely in CSS
+      so the demo stays self-contained (no image requests) ── */
+.qp-wallpaper {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 60% at 50% 42%, rgba(56,152,236,.55) 0%, rgba(56,152,236,0) 70%),
+    radial-gradient(55% 45% at 32% 62%, rgba(120,86,220,.45) 0%, rgba(120,86,220,0) 72%),
+    radial-gradient(60% 50% at 70% 30%, rgba(34,205,215,.30) 0%, rgba(34,205,215,0) 70%),
+    linear-gradient(160deg, #0a1730 0%, #0a1226 45%, #070a16 100%);
+}
+/* Soft petal streaks over the bloom — the "flowing ribbon" look, kept low
+   contrast so the hex menu stays the brightest thing on screen. */
+.qp-wallpaper::before,
+.qp-wallpaper::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 46%;
+  width: 78%; height: 62%;
+  margin: -31% 0 0 -39%;
+  border-radius: 50% 50% 50% 50% / 62% 58% 42% 38%;
+  background: linear-gradient(130deg, rgba(255,255,255,.16), rgba(255,255,255,0) 62%);
+  filter: blur(9px);
+}
+.qp-wallpaper::after {
+  transform: rotate(-28deg) scale(.78);
+  background: linear-gradient(300deg, rgba(120,220,255,.20), rgba(120,220,255,0) 60%);
+}
+/* Vignette, so the panel edges stay dark against the page background */
+.qp-desktop-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 100% at 50% 40%, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 100%);
+}
+
+/* ── Desktop shortcuts, top-left ─────────────── */
+.qp-desk-icons {
+  position: absolute;
+  left: 10px; top: 10px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.qp-desk-icon {
+  width: 52px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  text-align: center;
+}
+.qp-desk-icon svg { width: 22px; height: 22px; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.qp-desk-icon span {
+  font-size: 7px;
+  line-height: 1.2;
+  color: #eef2f7;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85);
+}
+
+/* ── Taskbar: Win11 centered icon row on a translucent bar ── */
+.qp-taskbar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 9px;
+  background: rgba(24, 26, 32, .82);
+  border-top: 1px solid rgba(255,255,255,.07);
+  backdrop-filter: blur(12px);
+}
+.qp-tb-item {
+  position: relative;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+}
+.qp-tb-item svg { width: 16px; height: 16px; display: block; }
+.qp-tb-item.run::after {
+  content: "";
+  position: absolute;
+  bottom: -3px; left: 50%;
+  width: 8px; height: 2px;
+  margin-left: -4px;
+  border-radius: 1px;
+  background: #6fb7ff;
+}
+/* the search pill sitting next to Start, as on a stock Win11 taskbar */
+.qp-tb-search {
+  width: 46px; height: 17px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.09);
+}
+
+/* The hotkey chip normally hugs the bottom edge — lift it above the
+   taskbar when a desktop backdrop is present. */
+.qp-demo.has-desktop .qp-hotkey { bottom: 40px; }

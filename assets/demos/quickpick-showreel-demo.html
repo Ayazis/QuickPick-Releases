@@ -53,9 +53,6 @@
   .sr-web .row { display: flex; gap: 10px; margin: 0 18px; }
   .sr-web .row i { flex: 1; height: 60px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
-  .sr-code { height: calc(100% - 26px); box-sizing: border-box; padding: 12px 14px; background: #1e1e1e; color: #d4d4d4;
-             font: 9px/1.7 "Cascadia Mono", Consolas, monospace; }
-  .sr-code .k { color: #569cd6; } .sr-code .f { color: #dcdcaa; } .sr-code .s { color: #ce9178; }
   .sr-spot { height: calc(100% - 26px); box-sizing: border-box; padding: 14px; display: flex; gap: 12px; align-items: center;
              background: linear-gradient(160deg, #1f3a2a, #121212 70%); color: #fff; font: 9px "Segoe UI", system-ui, sans-serif; }
   .sr-spot .art { width: 66px; height: 66px; border-radius: 4px; background: conic-gradient(from 30deg, #1db954, #0b5c5e, #29d3e0, #1db954); }
@@ -189,8 +186,8 @@ document.addEventListener("DOMContentLoaded", function () {
   var ENTRY = { x: 470, y: 560 };
 
   /* App bar: running apps, in bar order. Spotify only joins once launched. */
-  var BAR = ["outlook", "chrome", "vsCode", "spotify"];
-  var BAR_SPOTIFY = 3;
+  var BAR = ["outlook", "chrome", "spotify"];
+  var BAR_SPOTIFY = 2;
 
   var root = document.getElementById("qpDemo");
   var qp = QuickPickHex.create(root, {
@@ -204,18 +201,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }) }
   });
   root.style.maxWidth = "none"; // fill the hero, not the frame size
-  qp.root.querySelector(".qp-hotkey").style.display = "none"; // shown top-right instead
+  qp.root.querySelector(".qp-hotkey").style.display = "none"; // the showreel draws its own, larger
 
   var desktop = QpDesktop.build(qp, {
     shortcuts: [
       { icon: "recycleBin", label: "Recycle Bin" },
       { icon: "spotify", label: "Spotify" }
     ],
-    taskbar: ["fileExplorer", { icon: "outlook", run: true }, { icon: "chrome", run: true }, { icon: "vsCode", run: true }, "spotify"]
+    taskbar: ["fileExplorer", { icon: "outlook", run: true }, { icon: "chrome", run: true }, "spotify"]
   });
-  var tbSpotify = desktop.querySelectorAll(".qp-tb-item")[5]; // Start, explorer, outlook, chrome, code, spotify
+  var tbSpotify = desktop.querySelectorAll(".qp-tb-item")[4]; // Start, explorer, outlook, chrome, spotify
 
-  /* ── App windows ── */
+  /* ── App windows ──
+     Only the window a beat is about is on screen; the others count as
+     minimized (still running, still previewable from the app bar). */
   function appWin(icon, title, body, at) {
     return QpWindow.build(qp, { className: "qp-fw-chrome sr-app", small: true, icon: icons[icon], title: title, bodyHTML: body, at: at, before: qp.win });
   }
@@ -233,17 +232,17 @@ document.addEventListener("DOMContentLoaded", function () {
   var spotWin = appWin("spotify", "Spotify",
     '<div class="sr-spot"><div class="art"></div><div><div style="opacity:.6">NOW PLAYING</div>' +
     '<div class="t">Flow State</div><div style="opacity:.7">Focus Mix</div><div class="bar"><i></i></div></div></div>',
-    { left: 740, top: 320, width: 300, height: 140 });
-  var codeWin = appWin("vsCode", "main.js — Visual Studio Code",
-    '<div class="sr-code"><div><span class="k">const</span> qp = QuickPick.<span class="f">summon</span>(cursor);</div>' +
-    '<div><span class="k">await</span> qp.<span class="f">run</span>(<span class="s">"volume"</span>);</div><div style="opacity:.5">// one hotkey, everything at hand</div></div>',
-    { left: 160, top: 200, width: 520, height: 330 });
+    { left: 330, top: 268, width: 250, height: 120 });
   var reply = mailWin.el.querySelector(".reply");
   var spotBody = spotWin.el.querySelector(".sr-spot");
-  var WINS = { outlook: mailWin, chrome: chromeWin, vsCode: codeWin, spotify: spotWin };
+  var WINS = { outlook: mailWin, chrome: chromeWin, spotify: spotWin };
 
+  function only(w) {
+    [chromeWin, mailWin, spotWin].forEach(function (x) { x.el.classList.toggle("active", x === w); });
+    focus(w);
+  }
   function focus(w) {
-    [chromeWin, mailWin, codeWin, spotWin].forEach(function (x) { x.el.classList.toggle("front", x === w); });
+    [chromeWin, mailWin, spotWin].forEach(function (x) { x.el.classList.toggle("front", x === w); });
   }
 
   /* Window previews: the thumbnail is a scaled static copy of the window,
@@ -312,6 +311,7 @@ document.addEventListener("DOMContentLoaded", function () {
     hkKeys.classList.remove("pressed");
     at = { x: qp.cursor.x + 6, y: qp.cursor.y + 8 };
     qp.window.show(at.x, at.y);
+    setTimeout(function () { hk.classList.remove("on"); }, 500);
     await sleep(settleMs || 300);
   }
   function dismiss() {
@@ -360,9 +360,7 @@ document.addEventListener("DOMContentLoaded", function () {
     { fn: async function (q) {
         root.classList.add("qp-no-anim");
         q.win.classList.remove("shown", "hiding");
-        chromeWin.el.classList.add("active"); mailWin.el.classList.add("active"); codeWin.el.classList.add("active");
-        spotWin.el.classList.remove("active"); spotBody.classList.remove("playing");
-        focus(chromeWin);
+        only(null); spotBody.classList.remove("playing");
         reply.innerHTML = "";
         tbSpotify.classList.remove("run"); q.appBar.setActive(BAR_SPOTIFY, false);
         thumb.hide(); q.stage.classList.remove("peek");
@@ -388,7 +386,7 @@ document.addEventListener("DOMContentLoaded", function () {
         dim.classList.remove("on");
       } },
 
-    /* 2. Summon over Chrome and push in. */
+    /* 2. Summon on a clean desktop and push in. */
     { fn: async function (q) {
         await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 500);
         await summon(CONFIGS.desktop, 200);
@@ -404,7 +402,8 @@ document.addEventListener("DOMContentLoaded", function () {
         root.style.filter = "";
         q.hex.clearGauge(SLOT.volume); q.hex.clearGauge(SLOT.brightness);
         dismiss();
-        await sleep(400);
+        await caption("");
+        await sleep(200);
       } },
 
     /* 4. Customize every action: a hex that launches Spotify, then play. */
@@ -414,7 +413,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await shot(CLOSE, 400);
         await pick(SLOT.spotify, 380);
         await sleep(250);
-        spotWin.el.classList.add("active"); focus(spotWin);
+        only(spotWin);
         tbSpotify.classList.add("run"); q.appBar.setActive(BAR_SPOTIFY, true);
         await sleep(450);
         await summon(CONFIGS.desktop, 100);
@@ -422,23 +421,30 @@ document.addEventListener("DOMContentLoaded", function () {
         await pick(SLOT.play, 340);
         spotBody.classList.add("playing");
         CONFIGS.desktop[SLOT.play] = "pause";
-        await sleep(450);
+        await sleep(700);
+        await caption("");
       } },
 
     /* 5. A different menu per app: in Outlook the same hotkey brings up
           the mail profile, and a snippet hex types the reply. */
     { fn: async function (q) {
         caption("A different menu per app", "In Outlook, the same hotkey opens your writing tools.");
-        focus(mailWin);
-        await q.cursor.move(SUMMON.x - 70, SUMMON.y + 10, 450);
+        only(mailWin);
+        await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 400);
         await summon(CONFIGS.outlook, 200);
-        await shot(CLOSE, 500);
-        await sleep(500);
-        await pick(SLOT.snippet, 380);
-        await sleep(200);
-        await QuickPickHex.type(reply, "Yes! Add a Text step to any hex and it types into whatever app you're in. Cheers!", { ms: 11 });
-        QuickPickHex.endLine(reply);
+        await shot(CLOSE, 450);
         await sleep(450);
+        await pick(SLOT.snippet, 340);
+        // Follow the text: frame the reply box while it is typed.
+        var rp = QuickPickHex.offsetRelativeTo(reply, q.stage);
+        await Promise.all([
+          q.camera.to(rp.x + reply.offsetWidth / 2, rp.y + 10, 1.3, 450),
+          q.cursor.move(rp.x + reply.offsetWidth / 2, rp.y + reply.offsetHeight + 30, 450)
+        ]);
+        await QuickPickHex.type(reply, "Yes! Add a Text step to any hex and it types into whatever app you're in.", { ms: 11 });
+        QuickPickHex.endLine(reply);
+        await sleep(700);
+        await caption("");
       } },
 
     /* 6. App preview & fast switching: hover the bar, peek, click. */
@@ -447,7 +453,7 @@ document.addEventListener("DOMContentLoaded", function () {
         await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 400);
         await summon(CONFIGS.outlook, 150);
         await shot(WIDE, 600);
-        var order = [1, 2, BAR_SPOTIFY];
+        var order = [1, BAR_SPOTIFY];
         for (var n = 0; n < order.length; n++) {
           var i = order[n], c = q.appBar.center(i);
           if (n) q.appBar.hover(order[n - 1], false);
@@ -467,8 +473,8 @@ document.addEventListener("DOMContentLoaded", function () {
         thumb.hide(); q.appBar.hover(BAR_SPOTIFY, false);
         q.stage.classList.remove("peek"); spotWin.el.classList.remove("peeked");
         dismiss();
-        focus(spotWin);
-        await sleep(500);
+        only(spotWin);
+        await sleep(600);
         await caption("");
       } },
 
@@ -490,7 +496,6 @@ document.addEventListener("DOMContentLoaded", function () {
     loop: true,
     /* Static frame: the desktop menu open with its app bar. */
     reducedMotion: async function (q) {
-      chromeWin.el.classList.add("active"); mailWin.el.classList.add("active"); codeWin.el.classList.add("active"); focus(chromeWin);
       shot(CLOSE);
       load(CONFIGS.desktop);
       q.window.show(SUMMON.x, SUMMON.y);

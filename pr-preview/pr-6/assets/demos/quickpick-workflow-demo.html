@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickPick — hex menu demo (an end-to-end workflow)</title>
+<!-- QuickPick hex-menu landing-page demo: one workflow, end to end.
+     The other slides each isolate a single capability. This one chains
+     them, because that is how the app is actually used: summon on the
+     desktop, launch Windows Terminal from a hex, summon again *inside*
+     Terminal where the menu has a different configuration, connect over
+     SSH, and fill the username and the password from two more hexes —
+     QuickPick typing the text, which is the TextWriter step no other
+     slide shows. Four summons in half a minute is the point: the hotkey
+     is muscle memory, not a ceremony.
+
+     Nothing on screen belongs to anyone: the host is fictional, the
+     account is a generic `deploy` service account rather than a person's
+     name, the local prompt is a generic C:\Users\dev, and the password is
+     only ever rendered as bullets. Keep it that way — this page is public,
+     so no real usernames, machine names or paths should end up in here.
+
+     Built on the shared qp-core engine — see qp-core.js/qp-core.css/
+     qp-icons.js/qp-brand-icons.js/qp-desktop.js/qp-window.js. -->
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0b0d; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+  /* ── The Windows Terminal window this workflow runs in ──
+        Chrome comes from qp-window.css; this is placement, the launch
+        animation, and the console interior. */
+  .qp-term-win {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: #0c0c0c;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, .62), 0 2px 6px rgba(0, 0, 0, .45);
+    opacity: 0;
+    transform: scale(.94);
+    transform-origin: 50% 62%;
+    z-index: 1;
+    transition: opacity .18s ease-in, transform .18s ease-in;
+  }
+  /* Launching an app is the one beat that should feel like it arrives, so
+     the window comes in on a back-ease and leaves on a plain fade. */
+  .qp-term-win.active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity .26s ease-out, transform .42s cubic-bezier(.34,1.56,.64,1);
+  }
+  /* Between loops the window is torn down and rebuilt with transitions
+     off, so it snaps away instead of visibly rewinding. */
+  .qp-term-win.qp-no-anim { transition: none; }
+
+  /* Tab strip — Windows Terminal's, minus the chrome we don't need */
+  .fwb-terminal { background: #0c0c0c; display: flex; flex-direction: column; }
+  .term-tabs {
+    flex: none;
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 6px 0;
+    background: #1b1b1b;
+    border-bottom: 1px solid #000;
+  }
+  .term-tab {
+    display: flex; align-items: center; gap: 4px;
+    height: 15px; padding: 0 8px;
+    border-radius: 4px 4px 0 0;
+    background: #0c0c0c;
+    color: #d6d6d6;
+    font: 7.5px "Segoe UI", system-ui, sans-serif;
+  }
+  .term-tab svg { width: 8px; height: 8px; display: block; }
+  .term-plus, .term-chevron { color: #9a9a9a; font: 9px "Segoe UI", system-ui, sans-serif; padding: 0 3px; }
+
+  /* Console body. Output is bottom-anchored: the newest line always sits
+     just above the window's bottom edge, which is the strip that stays
+     visible while the hex menu is open over the top of the window. */
+  .term-body {
+    flex: 1;
+    min-height: 0;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 9px 7px;
+    /* A touch larger than the window title bars around it: monospace at
+       this size is what has to stay readable once the whole stage is
+       scaled down into a phone-width carousel card. */
+    font: 10px/1.55 "Cascadia Mono", Consolas, "Courier New", monospace;
+    color: #cccccc;
+    overflow: hidden;
+  }
+  .term-line { white-space: pre; }
+  .term-line.dim { color: #8a8a8a; }
+  /* Prompt colouring, taken from the palette the other demos already use:
+     the editor placeholder's green / teal / grey. */
+  .t-ps   { color: #56b6c2; }
+  .t-usr  { color: #4ccf7a; }
+  .t-dir  { color: #e5b53a; }
+  .t-sep  { color: #8a8a92; }
+  .t-ok   { color: #4ccf7a; }
+
+  /* No caption pill on this slide, unlike the per-app one: there the pill
+     was the only thing naming the focused app, whereas here the terminal's
+     own title bar and its taskbar entry already say it — and the pill's
+     usual spot is exactly where this window's last console lines sit. */
+
+  /* keep QuickPick above the terminal window */
+  .qp-demo .qp-window { z-index: 5; }
+
+  /* Slots a configuration doesn't use aren't rendered — the two menus
+     differ in silhouette, not just in icons. */
+  .qp-hex {
+    transition: opacity .35s ease-out, transform .35s cubic-bezier(.34,1.56,.64,1);
+    transform-origin: 50% 50%;
+  }
+  .qp-hex.qp-hex-empty { opacity: 0; transform: scale(.35); }
+  .qp-window.qp-no-anim .qp-hex { transition: none; }
+</style>
+<link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-window.css">
+<link rel="stylesheet" href="qp-desktop.css">
+</head>
+<body>
+
+<div class="qp-demo" id="qpDemo"></div>
+
+<script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
+<script src="qp-core.js" defer></script>
+<script src="qp-window.js" defer></script>
+<script src="qp-desktop.js" defer></script>
+<script defer>
+document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  "use strict";
+
+  /* ── Action glyphs. Same bar as the per-app slide: white currentColor
+     line art that reads at 13px with no second guess. `script`, `snippet`,
+     `clipboard` and `hotkey` are the step-type glyphs the customization
+     slide already uses; `sshConnect` and `splitPane` are new. ── */
+  var actionIcons = {
+    // arrow into a bracket — the standard "sign in / connect" mark
+    sshConnect:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="M3.2 12h10.6M10.4 8.4 14 12l-3.6 3.6"/>' +
+        '<path d="M15.4 4.6h5.4v14.8h-5.4"/></svg>',
+    splitPane:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round">' +
+        '<rect x="3.2" y="4.4" width="17.6" height="15.2" rx="2"/><path d="M12 4.4v15.2"/></svg>',
+    hotkey:
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<rect x="5.5" y="9" width="2.4" height="2.4" rx=".5"/><rect x="9" y="9" width="2.4" height="2.4" rx=".5"/>' +
+        '<rect x="12.5" y="9" width="2.4" height="2.4" rx=".5"/><rect x="16" y="9" width="2.4" height="2.4" rx=".5"/>' +
+        '<rect x="6.5" y="13" width="11" height="2.4" rx=".5"/></svg>',
+    script:
+      '<svg viewBox="0 0 24 24" fill="currentColor">' +
+        '<rect x="2.5" y="3.5" width="19" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<path d="M6 9l4 3-4 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<rect x="12.5" y="14" width="6" height="1.8" rx=".5"/></svg>',
+    snippet:
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v2H4zM4 9.5h16v2H4zM4 14h11v2H4z"/></svg>',
+    clipboard:
+      '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="3.5" width="12" height="3" rx="1"/>' +
+        '<rect x="4" y="5.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+        '<rect x="7.5" y="10" width="9" height="1.8" rx=".5"/><rect x="7.5" y="13.5" width="9" height="1.8" rx=".5"/>' +
+        '<rect x="7.5" y="17" width="6" height="1.8" rx=".5"/></svg>'
+  };
+  var icons = Object.assign({}, QpIcons, QpBrandIcons, actionIcons);
+
+  /* ── The two configurations this workflow passes through, as slot index
+     → icon, on the shared center + ring 1 + ring 2 grid.
+
+     On the desktop the menu is a launcher: the full ring plus one app out
+     to each side. Inside Terminal it is a tight 7 of terminal actions.
+     Same hotkey, same spot on screen, visibly different menu — and the
+     silhouette changes too, because unused slots aren't drawn. ── */
+  var CONFIGS = {
+    desktop: {
+      slots: {
+        0: "fileExplorer",
+        1: "windowsTerminal", 2: "chrome", 3: "vsCode",
+        4: "spotify", 5: "outlook", 6: "msTeams",
+        // Ring 2 is axial: {-2,1} is 9 o'clock and {2,-1} is 3 o'clock.
+        18: "figma", 12: "notion"
+      }
+    },
+    terminal: {
+      slots: {
+        0: "windowsTerminal",
+        1: "sshConnect",  // 1 o'clock  — clicked first
+        2: "snippet",     // 5 o'clock  — the username
+        3: "clipboard",   // 6 o'clock  — the password
+        4: "script", 5: "hotkey", 6: "splitPane"
+      }
+    }
+  };
+
+  /* Slot indices the timeline clicks, named so the beats read. */
+  var SLOT_TERMINAL = 1; // on the desktop config: launch Windows Terminal
+  var SLOT_SSH = 1, SLOT_USER = 2, SLOT_PASS = 3;
+
+  /* ── Shared geometry: identical to the other slides, so the carousel
+     reads as one continuous piece rather than five unrelated panels. ── */
+  var WORLD = { width: 760, height: 740 };
+  var OVERVIEW = { x: 380, y: 370, zoom: 0.5 };
+  var CLOSEUP_ZOOM = 1;
+  var CLOSEUP_DROP = 80;
+  var summonX = 380, summonY = 290;
+  var entryX = 235, entryY = 515;
+
+  var qp = QuickPickHex.create(document.getElementById("qpDemo"), {
+    cells: QuickPickHex.CELLS_R2,
+    bindings: [], // every slot is filled in by activate() below
+    icons: icons,
+    stageWidth: 380,
+    stageHeight: 370,
+    world: WORLD,
+    camera: OVERVIEW
+  });
+
+  var hotkeyChip = qp.root.querySelector(".qp-hotkey");
+
+  /* Windows Terminal starts *off* the taskbar's running list — the launch
+     beat is what puts it there. */
+  var desktop = QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "windowsTerminal", label: "Terminal" }
+    ],
+    taskbar: [
+      "fileExplorer",
+      { icon: "chrome", run: true },
+      { icon: "windowsTerminal" }, // not running yet
+      "msTeams", "outlook", "spotify"
+    ]
+  });
+  var tbTerminal = desktop.querySelectorAll(".qp-tb-item")[4]; // Start, search, explorer, chrome, terminal
+
+  /* ── The terminal window ──
+     Placed inside the close-up frame (world x 190-570, y 185-555) with the
+     console's last lines below the menu's footprint, so the transcript
+     stays readable even while QuickPick is open over the window. */
+  var TAB_STRIP =
+    '<div class="term-tabs">' +
+      '<div class="term-tab">' + QpBrandIcons.windowsTerminal + "<span>PowerShell</span></div>" +
+      '<span class="term-plus">+</span><span class="term-chevron">&#9662;</span>' +
+    "</div>";
+
+  var termWin = QpWindow.build(qp, {
+    className: "qp-term-win",
+    small: true,
+    icon: icons.windowsTerminal,
+    title: "Windows PowerShell",
+    bodyHTML: '<div class="qp-fw-body fwb-terminal">' + TAB_STRIP + '<div class="term-body"></div></div>',
+    // Sits inside the close-up frame with its bottom edge above the hotkey
+    // chip, and its top well under the menu's footprint (world y 190-390).
+    at: { left: 195, top: 195, width: 370, height: 295 },
+    before: qp.win // above the desktop, below QuickPick
+  });
+  var termOut = termWin.el.querySelector(".term-body");
+
+  var PS_PROMPT = '<span class="t-ps">PS C:\\Users\\dev&gt;</span> ';
+  var REMOTE_PROMPT =
+    '<span class="t-usr">deploy@build-01</span><span class="t-sep">:</span>' +
+    '<span class="t-dir">~</span><span class="t-sep">$</span> ';
+
+  /* Append a console line. The line is a real element with real text nodes
+     so QuickPickHex.type can write into it character by character. */
+  function line(html) {
+    var el = document.createElement("div");
+    el.className = "term-line";
+    if (html) el.innerHTML = html;
+    termOut.appendChild(el);
+    return el;
+  }
+  function clearTerminal() { termOut.innerHTML = ""; }
+
+  var hexEls = Array.from(qp.win.querySelectorAll(".qp-hex"));
+
+  /* Load a configuration into the grid: its slots get icons, every other
+     slot stops existing. */
+  function activate(q, cfg) {
+    hexEls.forEach(function (el, i) {
+      var name = cfg.slots[i];
+      el.classList.toggle("qp-hex-empty", !name);
+      q.hex.setIcon(i, name || "");
+      q.hex.hover(i, false);
+    });
+  }
+
+  /* Press the hotkey and bring the menu up at the summon point. The chip
+     is only shown for the beat around the press — with four summons in one
+     run, leaving it on screen throughout turns it into wallpaper. */
+  async function summon(q, settleMs) {
+    hotkeyChip.classList.remove("hidden");
+    await QuickPickHex.sleep(180);
+    await q.hotkey.press();
+    q.window.show(summonX, summonY);
+    await QuickPickHex.sleep(settleMs);
+  }
+
+  /* Move onto hex `i`, click it, and dismiss the menu — one action fired. */
+  async function pick(q, i, moveMs) {
+    var c = q.hex.center(i);
+    await q.cursor.move(c.x, c.y, moveMs || 420);
+    q.hex.hover(i, true);
+    await QuickPickHex.sleep(220);
+    await q.cursor.click();
+    q.hex.hover(i, false);
+    q.window.hide();
+    hotkeyChip.classList.add("hidden");
+    await QuickPickHex.sleep(300);
+  }
+
+  var TYPE_MS = 38;
+
+  var steps = [
+    /* 0. Reset at the top of every loop: bare desktop, no terminal, wide
+          shot, cursor parked off to the side. Everything snaps with
+          transitions off so the restart doesn't read as a rewind. */
+    { fn: async function (q) {
+        q.win.classList.add("qp-no-anim");
+        q.win.classList.remove("shown", "hiding");
+        termWin.el.classList.add("qp-no-anim");
+        termWin.el.classList.remove("active");
+        clearTerminal();
+        tbTerminal.classList.remove("run");
+        activate(q, CONFIGS.desktop);
+        q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom);
+        q.cursor.place(entryX, entryY);
+        void q.win.offsetWidth; // flush the snap before transitions come back
+        q.win.classList.remove("qp-no-anim");
+        termWin.el.classList.remove("qp-no-anim");
+        hotkeyChip.classList.remove("hidden");
+        await QuickPickHex.sleep(700);
+      } },
+
+    /* 1. Cursor drifts in over the empty desktop and the menu is summoned
+          where it lands — at its real size, next to nothing at all. */
+    { cursor: "move", to: [summonX - 8, summonY - 10], ms: 620 },
+    { sleep: 120 },
+    { fn: async function (q) { await summon(q, 620); } },
+
+    /* 2. Push in on the menu. */
+    { fn: async function (q) { await q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM, 850); } },
+    { sleep: 220 },
+
+    /* 3. Launch Windows Terminal from a hex — the app comes up and the
+          taskbar picks up its running underline. */
+    { fn: async function (q) {
+        await pick(q, SLOT_TERMINAL, 480);
+        termWin.el.classList.add("active");
+        tbTerminal.classList.add("run");
+        await QuickPickHex.sleep(520);
+        line('<span class="dim">Windows PowerShell</span>');
+        line('<span class="dim">Install the latest PowerShell for new features.</span>');
+        line("");
+        var l = line(PS_PROMPT);
+        QuickPickHex.type(l, "", {}); // park the caret on the fresh prompt
+        await QuickPickHex.sleep(700);
+      } },
+
+    /* 4. Same hotkey, inside Terminal — and the menu that comes up is a
+          different one. This is the beat the whole slide turns on, so it
+          gets the longest hold. */
+    { fn: async function (q) {
+        activate(q, CONFIGS.terminal);
+        await summon(q, 1250);
+      } },
+
+    /* 5. Connect: the hex runs the ssh command, QuickPick typing it out. */
+    { fn: async function (q) {
+        var l = termOut.lastChild;
+        await pick(q, SLOT_SSH, 400);
+        await QuickPickHex.type(l, "ssh build-01.internal", { ms: TYPE_MS });
+        QuickPickHex.endLine(l);
+        await QuickPickHex.sleep(320);
+        var ask = line("login as: ");
+        QuickPickHex.type(ask, "", {});
+        await QuickPickHex.sleep(520);
+      } },
+
+    /* 6. The username, from a hex — this is the TextWriter step: QuickPick
+          types into whatever has focus, no clipboard round-trip. */
+    { fn: async function (q) {
+        var l = termOut.lastChild;
+        await summon(q, 520);
+        await pick(q, SLOT_USER, 400);
+        await QuickPickHex.type(l, "deploy", { ms: TYPE_MS });
+        QuickPickHex.endLine(l);
+        await QuickPickHex.sleep(300);
+        var ask = line("password: ");
+        QuickPickHex.type(ask, "", {});
+        await QuickPickHex.sleep(480);
+      } },
+
+    /* 7. And the password, from the hex next to it — masked, the way the
+          console would echo it. */
+    { fn: async function (q) {
+        var l = termOut.lastChild;
+        await summon(q, 520);
+        await pick(q, SLOT_PASS, 400);
+        await QuickPickHex.type(l, "s3cret-token", { ms: TYPE_MS, mask: true });
+        QuickPickHex.endLine(l);
+        await QuickPickHex.sleep(420);
+      } },
+
+    /* 8. Logged in. */
+    { fn: async function () {
+        line('<span class="t-ok">Welcome to build-01.internal</span>');
+        line('<span class="dim">Last login: Sat Aug 16 09:12:04 2026</span>');
+        var l = line(REMOTE_PROMPT);
+        QuickPickHex.type(l, "", {});
+        await QuickPickHex.sleep(1100);
+      } },
+
+    /* 9. Pull back out to the whole desktop and hold on the payoff — one
+          hotkey, an app launched, a session opened and signed into. */
+    { fn: async function (q) {
+        await Promise.all([
+          q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom, 750),
+          q.cursor.move(entryX, entryY, 750)
+        ]);
+      } },
+    { sleep: 1500 }
+  ];
+
+  QuickPickHex.runSequence(qp, steps, {
+    loop: true,
+    /* Static payoff frame: the terminal open and signed in, the menu up
+       with the Terminal configuration, at the close framing. */
+    reducedMotion: async function (q) {
+      hotkeyChip.classList.add("hidden");
+      termWin.el.classList.add("active");
+      tbTerminal.classList.add("run");
+      line('<span class="dim">Windows PowerShell</span>');
+      line(PS_PROMPT + "ssh build-01.internal");
+      line("login as: deploy");
+      line("password: ••••••••••••");
+      line('<span class="t-ok">Welcome to build-01.internal</span>');
+      QuickPickHex.type(line(REMOTE_PROMPT), "", {});
+      activate(q, CONFIGS.terminal);
+      q.camera.to(summonX, summonY + CLOSEUP_DROP, CLOSEUP_ZOOM);
+      q.window.show(summonX, summonY);
+      var c = q.hex.center(SLOT_USER);
+      q.cursor.place(c.x, c.y);
+    }
+  });
+})();
+});
+</script>
+</body>
+</html>

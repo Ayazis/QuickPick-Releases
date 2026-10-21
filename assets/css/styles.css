@@ -1190,3 +1190,33 @@ footer a:hover { color: var(--text); }
     max-width: 220px;
   }
 }
+
+/* ── HERO SHOWREEL ── */
+.hero-oss {
+  margin: 4px 0 0;
+  padding: 4px 14px;
+  border: 1px solid rgba(41, 211, 224, 0.45);
+  border-radius: 999px;
+  background: rgba(15, 125, 128, 0.18);
+  color: #bff6ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hero-showreel {
+  position: relative;
+  width: min(1040px, 100%);
+  aspect-ratio: 16 / 9;
+  margin-top: 40px;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(41, 211, 224, 0.15);
+  overflow: hidden;
+}
+
+.hero-showreel-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  pointer-events: none;
+}

@@ -194,7 +194,7 @@ to hover apps 2 slots to the right of the intended one before the fix).
 | `qp-thumbnail.js` / `qp-thumbnail.css` | Window-thumbnail add-on (styled per `ThumbnailView.xaml` above: square corners, `#202024` bg, hover → `#333` + teal border, close ✕ on hover) |
 | `quickpick-hex-demo.html` | Basic hex-menu functionality demo |
 | `quickpick-appswitch-demo.html` | Active-apps demo: hover app icon → thumbnail after ~250ms → hover thumbnail → peek (others hidden) → click → switch |
-| `quickpick-showreel-demo.html` | 16:9 hero showreel embedded at the top of the landing page: kinetic title cards, summon burst, volume/brightness, app launch, per-app menu + snippet, full 19-slot bloom, open-source end card |
+| `quickpick-showreel-demo.html` | 16:9 hero showreel at the top of the landing page: the page one-liner as title cards, then one desktop session through the feature cards (system controls, custom action, per-app menu, app preview & switching) with real summon/hover/app-bar behaviour, ending on the open-source card |
 
 When adding a new demo, prefer extending the shared `qp-*` modules over
 duplicating markup/CSS in the demo HTML, and check this file's color

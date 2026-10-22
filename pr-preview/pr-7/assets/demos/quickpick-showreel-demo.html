@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QuickPick Showreel</title>
 <!-- QuickPick hero showreel: a ~30s loop for the top of the landing page.
-     Title cards carry the page's own one-liner, then one continuous desktop
+     A short hotkey card (the hero above carries the one-liner), then one continuous desktop
      session walks through the feature cards in order: built-in system
      controls, a custom action (launching an app), a different menu per app
      (a text snippet typed into Outlook), and app preview & fast switching.
@@ -376,12 +376,10 @@ document.addEventListener("DOMContentLoaded", function () {
         await sleep(300);
       } },
 
-    /* 1. The page's one-liner, then the hotkey. */
+    /* 1. The hotkey. The hero right above already carries the one-liner,
+          so the showreel doesn't repeat it. */
     { fn: async function () {
-        await card(w("The radial menu from your games.") + '<br><span class="sr-grad">' + w("Now on your desktop.") + "</span>", 1900);
-        await cardOut();
-        await card('<span class="w">One</span> <span class="w">hotkey.</span> <span class="w">' + KEYS + "</span>" +
-          '<span class="sr-sub">' + w("Your apps, shortcuts and system controls, right at your cursor.") + "</span>", 1900);
+        await card('<span class="w">One</span> <span class="w">hotkey.</span> <span class="w">' + KEYS + "</span>", 1500);
         await cardOut();
         dim.classList.remove("on");
       } },

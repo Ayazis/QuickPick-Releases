@@ -9,6 +9,8 @@ Whether you're switching between apps, adjusting volume, or minimizing a window,
   <img src="assets/quickpick_demo.gif" alt="demo">
 </p>
 
+**QuickPick is free and open source.** Watch the full interactive showreel on the [website](assets/demos/quickpick-showreel-demo.html), and contributions are welcome — come say hi on Discord.
+
 
 
 ---

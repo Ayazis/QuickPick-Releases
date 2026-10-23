@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QuickPick Showreel</title>
+<!-- QuickPick hero showreel: a ~30s loop for the top of the landing page.
+     A short hotkey card (the hero above carries the one-liner), then one continuous desktop
+     session walks through the feature cards in order: built-in system
+     controls, a custom action (launching an app), a different menu per app
+     (a text snippet typed into Outlook), and app preview & fast switching.
+     Everything QuickPick itself does follows the real app (see
+     QUICKPICK-STYLE-NOTES.md): it fades in at the cursor, hides after a
+     click, hovers with the darker gradient, shows the running-app bar and
+     ~250ms-delayed window previews with peek. Only the title cards, the
+     captions and the progress bar are showreel framing. Built on the shared
+     qp-core engine like the carousel demos. -->
+<style>
+  html, body { margin: 0; padding: 0; background: #050507; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+  .qp-demo { container-type: inline-size; border-radius: 16px; }
+  .qp-demo .qp-window { z-index: 6; }
+  .qp-demo .qp-cursor { z-index: 20; }
+
+  /* Slots a configuration doesn't use aren't drawn, so each menu has its
+     own silhouette (same approach as the workflow slide). */
+  .qp-hex.qp-hex-empty { visibility: hidden; }
+  .qp-no-anim, .qp-no-anim * { transition: none !important; }
+  .qp-app .qp-app-icon svg { width: 100%; height: 100%; display: block; }
+
+  /* ── Placeholder app windows ── */
+  .sr-app { opacity: 0; transition: opacity .3s; z-index: 2; }
+  .sr-app.active { opacity: 1; }
+  .sr-app.front { z-index: 3; }
+  /* Peek shows only the previewed window (ActivatePeek), others drop out */
+  .qp-stage.peek .sr-app:not(.peeked) { opacity: 0; }
+  .qp-stage.peek .sr-app.peeked { opacity: 1; z-index: 4; }
+
+  .sr-mail { display: flex; height: calc(100% - 26px); background: #f5f6f8; font: 9px/1.5 "Segoe UI", system-ui, sans-serif; color: #2b2b2b; }
+  .sr-mail .list { width: 34%; border-right: 1px solid #dfe2e6; background: #fff; }
+  .sr-mail .item { padding: 7px 9px; border-bottom: 1px solid #eef0f2; }
+  .sr-mail .item b { display: block; color: #111; }
+  .sr-mail .item.sel { background: #e6f0fb; border-left: 3px solid #0f6cbd; }
+  .sr-mail .read { flex: 1; padding: 10px 14px; }
+  .sr-mail .subj { font-size: 12px; font-weight: 700; color: #111; margin-bottom: 4px; }
+  .sr-mail .from { color: #666; margin-bottom: 8px; }
+  .sr-mail .reply { margin-top: 10px; padding: 8px 10px; min-height: 48px; border: 1px solid #c9d6e6; border-radius: 3px; background: #fff; }
+
+  .sr-web { height: calc(100% - 26px); background: #f3f4f6; font: 9px "Segoe UI", system-ui, sans-serif; }
+  .sr-web .url { margin: 6px 10px; padding: 4px 10px; border-radius: 12px; background: #e3e5e8; color: #555; }
+  .sr-web .hero { margin: 14px 18px 10px; height: 70px; border-radius: 6px; background: linear-gradient(120deg, #0b5c5e, #0f7d80 60%, #29d3e0); }
+  .sr-web .row { display: flex; gap: 10px; margin: 0 18px; }
+  .sr-web .row i { flex: 1; height: 60px; border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+  .sr-spot { height: calc(100% - 26px); box-sizing: border-box; padding: 14px; display: flex; gap: 12px; align-items: center;
+             background: linear-gradient(160deg, #1f3a2a, #121212 70%); color: #fff; font: 9px "Segoe UI", system-ui, sans-serif; }
+  .sr-spot .art { width: 66px; height: 66px; border-radius: 4px; background: conic-gradient(from 30deg, #1db954, #0b5c5e, #29d3e0, #1db954); }
+  .sr-spot .t { font-size: 13px; font-weight: 700; }
+  .sr-spot .bar { margin-top: 10px; width: 130px; height: 3px; border-radius: 2px; background: #444; overflow: hidden; }
+  .sr-spot .bar i { display: block; height: 100%; width: 4%; background: #1db954; transition: width 8s linear; }
+  .sr-spot.playing .bar i { width: 80%; }
+
+  /* Thumbnail shots: a scaled static copy of the window */
+  .sr-shot { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .sr-shot > * { position: static !important; opacity: 1 !important; }
+
+  /* ── Screen-space overlay (not scaled by the camera) ── */
+  .sr-overlay { position: absolute; inset: 0; z-index: 30; pointer-events: none; font-family: "Segoe UI", system-ui, sans-serif; }
+  .sr-dim { position: absolute; inset: 0; background: rgba(4,6,9,.8); backdrop-filter: blur(3px); opacity: 0; transition: opacity .6s ease; }
+  .sr-dim.on { opacity: 1; }
+
+  .sr-title {
+    position: absolute; left: 4cqw; right: 4cqw; top: 50%;
+    transform: translateY(-50%);
+    text-align: center; color: #f7f7f7;
+    font-weight: 800; letter-spacing: -.02em; line-height: 1.08;
+    font-size: 5.4cqw;
+  }
+  .sr-title .w {
+    display: inline-block; opacity: 0;
+    transform: translateY(.4em); filter: blur(5px);
+    transition: opacity .45s ease-out, transform .55s cubic-bezier(.2,.9,.25,1.1), filter .45s;
+  }
+  .sr-title.on .w { opacity: 1; transform: none; filter: none; }
+  .sr-title.out .w { opacity: 0; transform: translateY(-.3em); filter: blur(5px); transition-duration: .3s; }
+  .sr-grad { background: linear-gradient(90deg, #0f7d80, #29d3e0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sr-sub { display: block; margin-top: .6em; font-size: .34em; font-weight: 500; letter-spacing: 0; line-height: 1.4; color: #a9b8c0; }
+
+  .sr-keys { display: inline-flex; gap: .25em; align-items: center; font-size: .5em; vertical-align: middle; }
+  .sr-key { padding: .12em .5em; border: 1px solid #4a4a4a; border-bottom-width: 3px; border-radius: .22em;
+            background: #1c1c1f; color: #f0f0f0; font-weight: 600; transition: all .12s; }
+  .sr-keys.pressed .sr-key { border-color: #29d3e0; background: #2e2e33; transform: translateY(2px); border-bottom-width: 1px; }
+
+  /* Feature headline, top-left: named after the page's feature cards,
+     with a one-line description of what is happening on screen. */
+  .sr-cap {
+    position: absolute; left: 3cqw; top: 3cqw; max-width: 60cqw;
+    display: flex; align-items: flex-start; gap: 1.4cqw;
+    padding: 1.4cqw 2.2cqw 1.5cqw 1.4cqw;
+    border: 1px solid rgba(255,255,255,.12); border-radius: 1.4cqw;
+    background: rgba(10,12,18,.86); backdrop-filter: blur(12px);
+    box-shadow: 0 1cqw 3cqw rgba(0,0,0,.45);
+    color: #f7f7f7; opacity: 0; transform: translateY(-1cqw);
+    transition: opacity .25s, transform .3s cubic-bezier(.2,.9,.25,1.1);
+  }
+  .sr-cap.on { opacity: 1; transform: none; }
+  .sr-cap b { flex: none; display: flex; align-items: center; justify-content: center; width: 4.2cqw; height: 4.2cqw;
+              border-radius: 50%; background: #29d3e0; color: #06232b; font-size: 2.3cqw; font-weight: 800; }
+  .sr-cap .t { display: block; font-size: 3.6cqw; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; }
+  .sr-cap .d { display: block; margin-top: .5cqw; font-size: 1.9cqw; font-weight: 500; color: #a9b8c0; line-height: 1.3; }
+
+  /* Hotkey chip shown at each summon, bottom-left (clear of the menu) */
+  .sr-hk { position: absolute; left: 3cqw; bottom: 3cqw; font-size: 3.4cqw; opacity: 0; transition: opacity .15s; }
+  .sr-hk.on { opacity: 1; }
+
+  .sr-progress { position: absolute; left: 0; bottom: 0; height: 3px; width: 0; background: linear-gradient(90deg, #0f7d80, #29d3e0); }
+
+  .sr-badges { display: flex; gap: 1.2cqw; justify-content: center; margin-top: 2.4cqw; font-size: 1.7cqw; font-weight: 600; }
+  .sr-badge { padding: .5cqw 1.4cqw; border-radius: 999px; border: 1px solid rgba(41,211,224,.5); color: #bff6ff;
+              background: rgba(15,125,128,.18); opacity: 0; transform: translateY(8px);
+              transition: opacity .4s, transform .5s cubic-bezier(.2,.9,.25,1.2); }
+  .sr-title.on .sr-badge { opacity: 1; transform: none; }
+</style>
+<link rel="stylesheet" href="qp-core.css">
+<link rel="stylesheet" href="qp-window.css">
+<link rel="stylesheet" href="qp-desktop.css">
+<link rel="stylesheet" href="qp-appbar.css">
+<link rel="stylesheet" href="qp-thumbnail.css">
+</head>
+<body>
+
+<div class="qp-demo" id="qpDemo" role="img" aria-label="QuickPick showreel: one hotkey summons a radial menu at the cursor with system controls, custom actions, a different menu per app, and previews of your open windows."></div>
+
+<script src="qp-icons.js" defer></script>
+<script src="qp-brand-icons.js" defer></script>
+<script src="qp-appbar.js?v=2" defer></script>
+<script src="qp-core.js" defer></script>
+<script src="qp-window.js" defer></script>
+<script src="qp-desktop.js" defer></script>
+<script src="qp-thumbnail.js" defer></script>
+<script defer>
+document.addEventListener("DOMContentLoaded", function () {
+(function () {
+  "use strict";
+  var sleep = QuickPickHex.sleep;
+
+  /* Step-type glyphs, same line art as the customize/workflow slides. */
+  var extra = {
+    snippet: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16v2H4zM4 9.5h16v2H4zM4 14h11v2H4z"/></svg>',
+    hotkey:
+      '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<rect x="5.5" y="9" width="2.4" height="2.4" rx=".5"/><rect x="9" y="9" width="2.4" height="2.4" rx=".5"/><rect x="12.5" y="9" width="2.4" height="2.4" rx=".5"/>' +
+      '<rect x="16" y="9" width="2.4" height="2.4" rx=".5"/><rect x="6.5" y="13" width="11" height="2.4" rx=".5"/></svg>',
+    script:
+      '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2.5" y="3.5" width="19" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M6 9l4 3-4 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="12.5" y="14" width="6" height="1.8" rx=".5"/></svg>',
+    clipboard:
+      '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="3.5" width="12" height="3" rx="1"/>' +
+      '<rect x="4" y="5.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<rect x="7.5" y="10" width="9" height="1.8" rx=".5"/><rect x="7.5" y="13.5" width="9" height="1.8" rx=".5"/></svg>'
+  };
+  var icons = Object.assign({}, QpIcons, QpBrandIcons, extra);
+
+  /* Configurations (slot index → icon). On the desktop: the built-in
+     system controls plus one custom action, launching Spotify. In Outlook:
+     a mail profile of text snippets and hotkeys, picked automatically by
+     the active app. */
+  var CONFIGS = {
+    desktop: { 0: "tools", 1: "spotify", 2: "forward", 3: "play", 4: "backward", 5: "volume", 6: "adjust" },
+    outlook: { 0: "outlook", 1: "snippet", 2: "clipboard", 3: "hotkey", 4: "script", 5: "minimize", 6: "tools" }
+  };
+  var SLOT = { spotify: 1, play: 3, volume: 5, brightness: 6, snippet: 1 };
+
+  /* ── Geometry: 16:9 frame over a world twice its size ── */
+  var STAGE_W = 640, STAGE_H = 360;
+  var WORLD = { width: 1280, height: 720 };
+  var OVERVIEW = { x: 640, y: 360, zoom: 0.5 };
+  var SUMMON = { x: 650, y: 280 };
+  /* Camera shots, relative to wherever QuickPick was last summoned:
+     CLOSE holds the menu and its app bar, WIDE adds the window preview;
+     both keep QuickPick right of centre, clear of the headline. */
+  var CLOSE = { dx: -130, dy: 30, zoom: 1.15 }, WIDE = { dx: -150, dy: 100, zoom: 0.95 };
+  var at = { x: SUMMON.x, y: SUMMON.y };
+  function shot(s, ms) { return qp.camera.to(at.x + s.dx, at.y + s.dy, s.zoom, ms); }
+  var ENTRY = { x: 470, y: 560 };
+
+  /* App bar: running apps, in bar order. Spotify only joins once launched. */
+  var BAR = ["outlook", "chrome", "spotify"];
+  var BAR_SPOTIFY = 2;
+
+  var root = document.getElementById("qpDemo");
+  var qp = QuickPickHex.create(root, {
+    cells: QuickPickHex.DEFAULT_CELLS,
+    bindings: [],
+    icons: icons,
+    stageWidth: STAGE_W, stageHeight: STAGE_H,
+    world: WORLD, camera: OVERVIEW,
+    appBar: { apps: BAR.map(function (k, i) {
+      return { run: i !== BAR_SPOTIFY, icon: '<span class="qp-app-icon">' + icons[k] + "</span>" };
+    }) }
+  });
+  root.style.maxWidth = "none"; // fill the hero, not the frame size
+  qp.root.querySelector(".qp-hotkey").style.display = "none"; // the showreel draws its own, larger
+
+  var desktop = QpDesktop.build(qp, {
+    shortcuts: [
+      { icon: "recycleBin", label: "Recycle Bin" },
+      { icon: "spotify", label: "Spotify" }
+    ],
+    taskbar: ["fileExplorer", { icon: "outlook", run: true }, { icon: "chrome", run: true }, "spotify"]
+  });
+  var tbSpotify = desktop.querySelectorAll(".qp-tb-item")[4]; // Start, explorer, outlook, chrome, spotify
+
+  /* ── App windows ──
+     Only the window a beat is about is on screen; the others count as
+     minimized (still running, still previewable from the app bar). */
+  function appWin(icon, title, body, at) {
+    return QpWindow.build(qp, { className: "qp-fw-chrome sr-app", small: true, icon: icons[icon], title: title, bodyHTML: body, at: at, before: qp.win });
+  }
+  var chromeWin = appWin("chrome", "QuickPick — Google Chrome",
+    '<div class="sr-web"><div class="url">quick-pick.app</div><div class="hero"></div><div class="row"><i></i><i></i><i></i></div></div>',
+    { left: 240, top: 90, width: 600, height: 380 });
+  var mailWin = appWin("outlook", "Inbox — Outlook",
+    '<div class="sr-mail"><div class="list">' +
+      '<div class="item sel"><b>Sam Rivera</b>Loving QuickPick!</div>' +
+      '<div class="item"><b>Build server</b>Nightly passed</div>' +
+      '<div class="item"><b>Discord</b>3 new messages</div></div>' +
+    '<div class="read"><div class="subj">Loving QuickPick!</div><div class="from">Sam Rivera · 09:41</div>' +
+      'Can I put my email signature on a hex too?<div class="reply"></div></div></div>',
+    { left: 380, top: 120, width: 560, height: 360 });
+  var spotWin = appWin("spotify", "Spotify",
+    '<div class="sr-spot"><div class="art"></div><div><div style="opacity:.6">NOW PLAYING</div>' +
+    '<div class="t">Flow State</div><div style="opacity:.7">Focus Mix</div><div class="bar"><i></i></div></div></div>',
+    { left: 330, top: 268, width: 250, height: 120 });
+  var reply = mailWin.el.querySelector(".reply");
+  var spotBody = spotWin.el.querySelector(".sr-spot");
+  var WINS = { outlook: mailWin, chrome: chromeWin, spotify: spotWin };
+
+  function only(w) {
+    [chromeWin, mailWin, spotWin].forEach(function (x) { x.el.classList.toggle("active", x === w); });
+    focus(w);
+  }
+  function focus(w) {
+    [chromeWin, mailWin, spotWin].forEach(function (x) { x.el.classList.toggle("front", x === w); });
+  }
+
+  /* Window previews: the thumbnail is a scaled static copy of the window,
+     so it shows whatever is in it right now. */
+  var thumb = QpThumbnail.build(qp.stage);
+  function shotOf(w) {
+    var W = w.el.offsetWidth, H = w.el.offsetHeight;
+    var s = Math.min(116 / W, 74 / H);
+    var clone = w.el.cloneNode(true);
+    clone.style.width = W + "px"; clone.style.height = H + "px";
+    var bar = clone.querySelector(".qp-fw-bar"); if (bar) bar.remove();
+    return '<div class="sr-shot" style="width:' + W + "px;height:" + H + "px;transform:translate(" +
+      ((116 - W * s) / 2).toFixed(1) + "px," + ((74 - H * s) / 2).toFixed(1) + "px) scale(" + s.toFixed(4) + ')">' + clone.outerHTML + "</div>";
+  }
+
+  /* ── Screen-space overlay ── */
+  var ov = document.createElement("div"); ov.className = "sr-overlay"; root.appendChild(ov);
+  var KEYS = '<span class="sr-keys"><span class="sr-key">Ctrl</span><span style="color:#777">+</span><span class="sr-key">Space</span></span>';
+  ov.innerHTML = '<div class="sr-dim"></div><div class="sr-title"></div><div class="sr-cap"></div>' +
+                 '<div class="sr-hk">' + KEYS + '</div><div class="sr-progress"></div>';
+  var dim = ov.querySelector(".sr-dim"), title = ov.querySelector(".sr-title"),
+      cap = ov.querySelector(".sr-cap"), hk = ov.querySelector(".sr-hk"),
+      hkKeys = hk.querySelector(".sr-keys"), progress = ov.querySelector(".sr-progress");
+
+  function w(s) { return s.split(" ").map(function (x) { return '<span class="w">' + x + "</span>"; }).join(" "); }
+  async function card(html, holdMs) {
+    title.classList.remove("on", "out");
+    title.innerHTML = html;
+    title.querySelectorAll(".w").forEach(function (el, i) { el.style.transitionDelay = (i * 90) + "ms"; });
+    void title.offsetWidth;
+    title.classList.add("on");
+    await sleep(holdMs);
+  }
+  async function cardOut() {
+    title.querySelectorAll(".w").forEach(function (el) { el.style.transitionDelay = "0ms"; });
+    title.classList.add("out");
+    await sleep(260);
+    title.classList.remove("on", "out");
+  }
+
+  var capStep = 0;
+  async function caption(text, desc) {
+    if (cap.classList.contains("on")) { cap.classList.remove("on"); await sleep(180); }
+    if (!text) return;
+    cap.innerHTML = "<b>" + (++capStep) + '</b><span><span class="t">' + text + '</span><span class="d">' + desc + "</span></span>";
+    cap.classList.add("on");
+  }
+
+  /* ── QuickPick itself ── */
+  var hexEls = Array.from(qp.win.querySelectorAll(".qp-hex"));
+  function load(cfg) {
+    hexEls.forEach(function (el, i) {
+      qp.hex.hover(i, false);
+      qp.hex.clearGauge(i);
+      el.classList.toggle("qp-hex-empty", !cfg[i]);
+      qp.hex.setIcon(i, cfg[i] || "");
+    });
+  }
+
+  /* Hotkey → QuickPick fades in at the cursor (real showMe storyboard). */
+  async function summon(cfg, settleMs) {
+    load(cfg);
+    hk.classList.add("on");
+    hkKeys.classList.add("pressed");
+    await sleep(160);
+    hkKeys.classList.remove("pressed");
+    at = { x: qp.cursor.x + 6, y: qp.cursor.y + 8 };
+    qp.window.show(at.x, at.y);
+    setTimeout(function () { hk.classList.remove("on"); }, 500);
+    await sleep(settleMs || 300);
+  }
+  function dismiss() {
+    qp.window.hide();
+    hk.classList.remove("on");
+  }
+  /* Click a hex: the command runs and QuickPick hides. */
+  async function pick(i, moveMs) {
+    var c = qp.hex.center(i);
+    await qp.cursor.move(c.x, c.y, moveMs || 380);
+    qp.hex.hover(i, true);
+    await sleep(140);
+    await qp.cursor.click();
+    qp.hex.hover(i, false);
+    dismiss();
+  }
+  /* Drag on a slider hex: the gauge follows the value. */
+  async function drag(i, from, to, onValue) {
+    var c = qp.hex.center(i);
+    await qp.cursor.move(c.x, c.y, 280);
+    qp.hex.hover(i, true);
+    var stepv = from < to ? 5 : -5;
+    for (var p = from; stepv > 0 ? p <= to : p >= to; p += stepv) {
+      qp.hex.setGauge(i, p);
+      qp.cursor.moveInstant(c.x, c.y - (p - from) * 0.25);
+      if (onValue) onValue(p);
+      await sleep(40);
+    }
+    await sleep(200);
+    qp.hex.hover(i, false);
+  }
+
+  /* ── Progress bar spans the loop; later passes use the measured length ── */
+  var LOOP_MS = 31000, loopStart = 0;
+  function startProgress() {
+    if (loopStart) LOOP_MS = performance.now() - loopStart;
+    loopStart = performance.now();
+    progress.style.transition = "none"; progress.style.width = "0";
+    void progress.offsetWidth;
+    progress.style.transition = "width " + LOOP_MS + "ms linear";
+    progress.style.width = "100%";
+  }
+
+  var steps = [
+    /* 0. Reset: Outlook and Chrome open, Spotify not running yet. */
+    { fn: async function (q) {
+        root.classList.add("qp-no-anim");
+        q.win.classList.remove("shown", "hiding");
+        only(null); spotBody.classList.remove("playing");
+        reply.innerHTML = "";
+        tbSpotify.classList.remove("run"); q.appBar.setActive(BAR_SPOTIFY, false);
+        thumb.hide(); q.stage.classList.remove("peek");
+        BAR.forEach(function (_, i) { q.appBar.hover(i, false); });
+        cap.classList.remove("on"); hk.classList.remove("on"); capStep = 0;
+        root.style.filter = "";
+        q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom);
+        q.cursor.place(ENTRY.x, ENTRY.y);
+        dim.classList.add("on");
+        void root.offsetWidth;
+        root.classList.remove("qp-no-anim");
+        startProgress();
+        await sleep(300);
+      } },
+
+    /* 1. The hotkey. The hero right above already carries the one-liner,
+          so the showreel doesn't repeat it. */
+    { fn: async function () {
+        await card('<span class="w">One</span> <span class="w">hotkey.</span> <span class="w">' + KEYS + "</span>", 1500);
+        await cardOut();
+        dim.classList.remove("on");
+      } },
+
+    /* 2. Summon on a clean desktop and push in. */
+    { fn: async function (q) {
+        await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 500);
+        await summon(CONFIGS.desktop, 200);
+        await shot(CLOSE, 600);
+      } },
+
+    /* 3. Built-in system controls: volume, brightness. */
+    { fn: async function (q) {
+        caption("Built-in system controls", "Drag a hex to set volume and brightness.");
+        await drag(SLOT.volume, 30, 80);
+        await drag(SLOT.brightness, 70, 35, function (p) { root.style.filter = "brightness(" + (0.5 + p / 140) + ")"; });
+        await drag(SLOT.brightness, 35, 70, function (p) { root.style.filter = "brightness(" + (0.5 + p / 140) + ")"; });
+        root.style.filter = "";
+        q.hex.clearGauge(SLOT.volume); q.hex.clearGauge(SLOT.brightness);
+        dismiss();
+        await caption("");
+        await sleep(200);
+      } },
+
+    /* 4. Customize every action: a hex that launches Spotify, then play. */
+    { fn: async function (q) {
+        caption("Customize every action", "This hex launches Spotify. That one hits play.");
+        await summon(CONFIGS.desktop, 100);
+        await shot(CLOSE, 400);
+        await pick(SLOT.spotify, 380);
+        await sleep(250);
+        only(spotWin);
+        tbSpotify.classList.add("run"); q.appBar.setActive(BAR_SPOTIFY, true);
+        await sleep(450);
+        await summon(CONFIGS.desktop, 100);
+        await shot(CLOSE, 400);
+        await pick(SLOT.play, 340);
+        spotBody.classList.add("playing");
+        CONFIGS.desktop[SLOT.play] = "pause";
+        await sleep(700);
+        await caption("");
+      } },
+
+    /* 5. A different menu per app: in Outlook the same hotkey brings up
+          the mail profile, and a snippet hex types the reply. */
+    { fn: async function (q) {
+        caption("A different menu per app", "In Outlook, the same hotkey opens your writing tools.");
+        only(mailWin);
+        await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 400);
+        await summon(CONFIGS.outlook, 200);
+        await shot(CLOSE, 450);
+        await sleep(450);
+        await pick(SLOT.snippet, 340);
+        // Follow the text: frame the reply box while it is typed.
+        var rp = QuickPickHex.offsetRelativeTo(reply, q.stage);
+        await Promise.all([
+          q.camera.to(rp.x + reply.offsetWidth / 2, rp.y + 10, 1.3, 450),
+          q.cursor.move(rp.x + reply.offsetWidth / 2, rp.y + reply.offsetHeight + 30, 450)
+        ]);
+        await QuickPickHex.type(reply, "Yes! Add a Text step to any hex and it types into whatever app you're in.", { ms: 11 });
+        QuickPickHex.endLine(reply);
+        await sleep(700);
+        await caption("");
+      } },
+
+    /* 6. App preview & fast switching: hover the bar, peek, click. */
+    { fn: async function (q) {
+        caption("App preview & fast switching", "Hover an app to preview it, click to jump there.");
+        await q.cursor.move(SUMMON.x - 6, SUMMON.y - 8, 400);
+        await summon(CONFIGS.outlook, 150);
+        await shot(WIDE, 600);
+        var order = [1, BAR_SPOTIFY];
+        for (var n = 0; n < order.length; n++) {
+          var i = order[n], c = q.appBar.center(i);
+          if (n) q.appBar.hover(order[n - 1], false);
+          await q.cursor.move(c.x, c.y, n ? 260 : 380);
+          q.appBar.hover(i, true);
+          if (!n) await sleep(260); // _showThumbnailsTimer
+          var win = WINS[BAR[i]];
+          thumb.showFor(q.appBar.els[i], { icon: icons[BAR[i]], title: win.el.querySelector(".qp-fw-title").textContent, shot: shotOf(win) });
+          await sleep(n === order.length - 1 ? 300 : 550);
+        }
+        var t = thumb.center();
+        await q.cursor.move(t.x, t.y, 300);
+        thumb.hover(true);
+        spotWin.el.classList.add("peeked"); q.stage.classList.add("peek");
+        await sleep(650);
+        await q.cursor.click();
+        thumb.hide(); q.appBar.hover(BAR_SPOTIFY, false);
+        q.stage.classList.remove("peek"); spotWin.el.classList.remove("peeked");
+        dismiss();
+        only(spotWin);
+        await sleep(600);
+        await caption("");
+      } },
+
+    /* 7. Pull back and land the end card. */
+    { fn: async function (q) {
+        CONFIGS.desktop[SLOT.play] = "play";
+        await Promise.all([q.camera.to(OVERVIEW.x, OVERVIEW.y, OVERVIEW.zoom, 700), q.cursor.move(ENTRY.x, ENTRY.y, 700)]);
+        await sleep(300);
+        dim.classList.add("on");
+        await card('<span class="w">Quick</span><span class="w sr-grad">Pick</span>' +
+          '<span class="sr-sub">' + w("Everything at your cursor.") + "</span>" +
+          '<div class="sr-badges"><span class="sr-badge">Free</span><span class="sr-badge" style="transition-delay:.15s">Open source</span>' +
+          '<span class="sr-badge" style="transition-delay:.3s">Windows 11</span></div>', 2800);
+        await cardOut();
+      } }
+  ];
+
+  QuickPickHex.runSequence(qp, steps, {
+    loop: true,
+    /* Static frame: the desktop menu open with its app bar. */
+    reducedMotion: async function (q) {
+      shot(CLOSE);
+      load(CONFIGS.desktop);
+      q.window.show(SUMMON.x, SUMMON.y);
+      var c = q.hex.center(SLOT.volume);
+      q.cursor.place(c.x, c.y);
+    }
+  });
+})();
+});
+</script>
+</body>
+</html>

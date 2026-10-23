@@ -1190,3 +1190,84 @@ footer a:hover { color: var(--text); }
     max-width: 220px;
   }
 }
+
+/* ── HERO SHOWREEL ── */
+.hero-oss {
+  margin: 4px 0 0;
+  padding: 4px 14px;
+  border: 1px solid rgba(41, 211, 224, 0.45);
+  border-radius: 999px;
+  background: rgba(15, 125, 128, 0.18);
+  color: #bff6ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.hero-showreel {
+  position: relative;
+  width: min(1040px, 100%);
+  aspect-ratio: 16 / 9;
+  margin-top: 40px;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06), 0 0 60px rgba(41, 211, 224, 0.15);
+  overflow: hidden;
+}
+
+.hero-showreel-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── FEATURES GRID ──
+   Every feature card plays its own demo side by side (3 across on desktop,
+   2 on tablets, 1 on phones), replacing the one-at-a-time carousel. */
+.features-title {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 56px 0 28px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.features-grid .feature-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.features-grid .feature-card-image--demo,
+.features-grid .feature-card-image--question {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 380 / 370; /* the demos' own stage size, so no letterboxing */
+  margin: 0 0 18px;
+}
+
+.features-grid .feature-card-image--demo .feature-demo-frame {
+  width: 100%;
+  height: 100%;
+  transform: none;
+}
+
+.features-grid .feature-question-mark {
+  font-size: 10rem;
+}
+
+@media (max-width: 960px) {
+  .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .features-grid { grid-template-columns: minmax(0, 1fr); }
+  .features-grid .feature-card-image--demo,
+  .features-grid .feature-card-image--question { max-width: none; }
+}

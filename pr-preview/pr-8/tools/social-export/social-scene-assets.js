@@ -45,6 +45,8 @@ window.buildSocialScene=function(){
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M12 15.6V4.4M7.4 9l4.6-4.6L16.6 9M4.6 19.4h14.8"/></svg>'
   };
+  actionIcons.duplicateLayer = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg>';
+  actionIcons.pen = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m4 20 3-12 8-4 5 5-4 8-12 3Zm0 0 7-7M15 4l5 5"/><circle cx="12" cy="12" r="1.7"/></svg>';
   var icons = Object.assign({}, QpIcons, QpBrandIcons, actionIcons);
 
   /* ── The grid every configuration is drawn on: center, ring 1 (6), then
@@ -78,7 +80,7 @@ window.buildSocialScene=function(){
       label: "Adobe Photoshop",
       slots: {
         0: "photoshop",
-        1: "brush", 2: "layers", 3: "textTool", 4: "undo", 5: "crop", 6: "exportFile",
+        1: "brush", 2: "pen", 3: "textTool", 4: "undo", 5: "crop", 6: "duplicateLayer",
         // Ring 2 is axial, so a horizontal neighbour is r = -c/2, not r = 0:
         // {-2,1} is 9 o'clock and {2,-1} is 3 o'clock. ({-2,0} and {2,0}
         // sit at 10 and 4 o'clock.)

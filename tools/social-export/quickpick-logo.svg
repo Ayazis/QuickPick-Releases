@@ -1,0 +1,13 @@
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- QuickPick mark: flat-top hexagon, simplified for small-size legibility.
+       Recentered in a 100x100 box with a bold bright border and an enlarged
+       white inner hexagon so it stays crisp in the tray and taskbar. -->
+
+  <!-- Outer hexagon: flat dark face + bold bright border (fills the frame width) -->
+  <polygon points="97,50 73.5,90.703 26.5,90.703 3,50 26.5,9.297 73.5,9.297"
+           fill="#3a3a3a" stroke="#9a9a9a" stroke-width="6" stroke-linejoin="round" />
+
+  <!-- Inner hexagon: soft off-white glyph (enlarged, ratio ~0.48) -->
+  <polygon points="72.478,50 61.239,69.467 38.761,69.467 27.522,50 38.761,30.533 61.239,30.533"
+           fill="#e6e6e6" />
+</svg>

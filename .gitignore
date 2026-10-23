@@ -389,6 +389,10 @@ FodyWeavers.xsd
 # Local History for Visual Studio Code
 .history/
 
+# Generated social media and local dependencies
+tools/social-export/node_modules/
+tools/social-export/out/
+
 # Windows Installer files from build outputs
 *.cab
 *.msi

@@ -1,0 +1,7 @@
+[
+  {"id":"controls","file":"quickpick-hex-demo.html","title":"Your controls. Right here.","description":"Volume, brightness and playback. One menu at your cursor."},
+  {"id":"customize","file":"quickpick-customize-demo.html","title":"Make every action yours.","description":"Your apps. Your shortcuts. A grid shaped around your day."},
+  {"id":"context","file":"quickpick-percontext-demo.html","title":"Same hotkey. Different menu.","description":"QuickPick follows your focus with a configuration for each app."},
+  {"id":"workflow","file":"quickpick-workflow-demo.html","title":"Turn clicks into a workflow.","description":"Launch an app, run a command and insert text from one menu."},
+  {"id":"switching","file":"quickpick-appswitch-demo.html","title":"See it. Switch to it.","description":"Preview your open windows and jump straight to the one you need."}
+]

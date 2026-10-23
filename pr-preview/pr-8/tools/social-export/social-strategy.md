@@ -2,6 +2,8 @@
 
 ## Revised direction after pilot review
 
+Persistent branding: keep the same background and fixed logo/name/website/badges visible across both text and demo segments. Only the central message or demonstration changes. Use the real QuickPick logo rather than a substitute hexagon glyph. Requested badges: Free and Open source; the latter is draft launch copy until the source is publicly released under its planned license.
+
 Latest refinement: separate reading from watching. Use a full-screen, static feature message, remove it completely, then play its demonstration. Repeat for the three features, followed by a dedicated CTA. Do not change headlines while asking the viewer to follow the cursor. The v3 cut uses 1.5–2 seconds per feature card, 3 seconds per demonstration, and a 2.5-second closing card (17 seconds total).
 
 Lead with a short, multi-feature acquisition ad: three concrete benefits in roughly 12–15 seconds, with large animated headlines and cuts aligned to sound accents. Show the breadth and immediacy of QuickPick before asking for a download. Retain single-feature stories as follow-up explainers. The initial volume pilot felt too slow and instructional for the desired brand impression. `social-montage-post.md` describes the revised 12.5-second, three-feature draft.

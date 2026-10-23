@@ -1,0 +1,40 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>QuickPick — Read, then watch</title>
+<style>
+*{box-sizing:border-box}body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#08111b;color:#f4f8ff;font-family:'Segoe UI',sans-serif}
+.card{position:absolute;inset:0;background:radial-gradient(ellipse at 25% 45%,#163d49,#08111b 75%);padding:0 84px;display:flex;flex-direction:column;justify-content:center}
+.brand{position:absolute;top:170px;left:84px;font-size:44px;font-weight:750;color:#50e0da;letter-spacing:-1px}.platform{position:absolute;top:183px;right:150px;color:#a7bdcc;font-size:24px}
+.label{font-size:25px;letter-spacing:4px;color:#50e0da;font-weight:650;margin-bottom:35px}h1{font-size:108px;line-height:1.05;letter-spacing:-5px;margin:0;max-width:830px;font-weight:800}.foot{position:absolute;bottom:240px;left:84px;font-size:20px;color:#8aa3b5}
+.cta{margin-top:55px;font-size:36px;color:#50e0da;line-height:1.6}
+.demo{position:absolute;inset:0;display:none;overflow:hidden;background:#080e18}.back{position:absolute;inset:-100px;width:1280px;height:2120px;object-fit:cover;filter:blur(65px) brightness(.3);opacity:.6}.front{position:absolute;left:0;top:430px;width:1080px;height:1053px;object-fit:contain;box-shadow:0 0 120px #0008}
+body{background:radial-gradient(ellipse at 25% 45%,#163d49,#08111b 75%)}
+.card,.demo{background:transparent}
+.front{left:60px;top:520px;width:960px;height:936px;border:1px solid #365764;border-radius:24px;box-shadow:0 20px 75px #0005}
+.identity{position:absolute;top:150px;left:84px;right:150px;z-index:5;display:flex;align-items:flex-start;gap:24px}
+.identity img{width:94px;height:94px;margin-top:3px;flex:none}
+.name{font-size:62px;line-height:1.1;font-weight:750;letter-spacing:-2px;color:#f2f8fc}
+.website{font-size:32px;letter-spacing:1px;color:#50e0da;margin-top:13px}
+.badges{display:flex;gap:14px;margin-top:25px}
+.badge{font-size:24px;font-weight:600;line-height:1;padding:12px 18px;border:1px solid #3e7d7b;border-radius:9px;background:#163b3d;color:#b8fff0}
+.badge svg{width:22px;height:22px;vertical-align:-4px;margin-right:7px;stroke:currentColor;fill:none;stroke-width:1.8}
+.persistent-footer{position:absolute;bottom:225px;left:84px;right:150px;z-index:5;color:#8aa3b5;font-size:20px;display:flex;justify-content:space-between;gap:20px}
+</style>
+<div class="identity"><img src="quickpick-logo.svg" alt="QuickPick logo"><div><div class="name">QuickPick</div><div class="website">quick-pick.app</div><div class="badges"><span class="badge">Free</span><span class="badge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 6-6 6 6 6m8-12 6 6-6 6m-2-15-4 18"/></svg>Open source</span></div></div></div>
+<div class="card"><div class="label"></div><h1></h1><div class="cta"></div></div>
+<div class="demo"><img class="front" alt="QuickPick feature demonstration"></div>
+<div class="persistent-footer"><span>WINDOWS 11</span><span>Illustrated demos · Interface may vary</span></div>
+<script>
+window.renderAlternating=async(t,src)=>{
+ const extra=window.controlsExtra||0;
+ const switchExtra=window.switchExtra||0,contextExtra=window.contextExtra||0;
+ const switchEnd=9.5+extra+switchExtra,contextStart=11.5+extra+switchExtra,contextEnd=14.5+extra+switchExtra+contextExtra;
+ const action=(t>=2&&t<5+extra)||(t>=6.5+extra&&t<switchEnd)||(t>=contextStart&&t<contextEnd);
+ document.querySelector('.demo').style.display=action?'block':'none';
+ document.querySelector('.card').style.display=action?'none':'flex';
+ const card=t<5+extra?{label:extra?'VOLUME + BRIGHTNESS':'SYSTEM CONTROLS',title:'Your controls.<br>At your cursor.'}:t<switchEnd?{label:'APP SWITCHING',title:'Preview.<br>Switch.'}:t<contextEnd?{label:'PER-APP MENUS',title:'A different menu.<br>For each app.'}:{label:'QUICKPICK FOR WINDOWS 11',title:'Your desktop.<br>One shortcut.'};
+ document.querySelector('.label').textContent=card.label;
+ document.querySelector('h1').innerHTML=card.title;
+ document.querySelector('h1').style.fontSize=t>=switchEnd&&t<contextEnd?'94px':'108px';
+ document.querySelector('.cta').innerHTML=t>=contextEnd?'Get QuickPick ↗':'';
+ if(action)await Promise.all([...document.querySelectorAll('.demo img')].map(async img=>{if(img.src!==src){img.src=src;await img.decode()}}));
+};
+</script></html>

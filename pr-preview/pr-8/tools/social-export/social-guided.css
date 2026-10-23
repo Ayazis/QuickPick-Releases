@@ -1,0 +1,13 @@
+.custom{position:absolute;left:60px;top:520px;width:960px;height:935px;border:1px solid #365764;border-radius:24px;overflow:hidden;box-shadow:0 20px 75px #0005}
+#qpDemo{width:380px;margin:0;transform:scale(2.5263157895);transform-origin:0 0;border-radius:0}
+/* Every moving property is evaluated from the export timestamp. */
+.custom *{transition:none!important;animation:none!important}
+.qp-app-win{box-sizing:content-box}
+.qp-fw-titlebar *{box-sizing:content-box}
+.qp-app-win.active{transform:none}
+.qp-tooltip{position:absolute;z-index:12;background:#151c24;color:#f1faff;border:1px solid #61999d;border-radius:4px;padding:6px 9px;font-size:12px;white-space:nowrap;box-shadow:0 4px 12px #0008}
+.legend{position:absolute;top:1490px;left:84px;width:870px;font-size:29px;line-height:1.7;color:#b8cad6}
+.legend strong{color:#50e0da;font-size:31px}
+.cta{max-width:790px;font-size:38px;line-height:1.5;color:#b8cad6}
+.qp-thumb-shot .preview-body{width:330px;height:212px;transform:scale(.3515);transform-origin:0 0}
+.qp-thumb-shot .qp-fw-body{height:212px}

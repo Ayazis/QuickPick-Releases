@@ -82,6 +82,9 @@ context menus) are square or very slightly rounded.
   non-running pinned apps have no underline.
 - `AppLinkBarWidth = appCount * 35` — bar width is purely a function of
   app count, buttons are laid out edge-to-edge in a row.
+- The black strip behind the buttons only spans first-button centre to
+  last-button centre (`(appCount - 1) * 35`): the end circles cover its
+  edges, so no black shows outside the first and last app.
 
 ## Hex menu buttons (`HexGridCreator.cs`, `HexagonShape.cs`, `QpButton.cs`)
 

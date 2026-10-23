@@ -20,7 +20,9 @@ window.QpAppBar = (function () {
       barEl.appendChild(el);
       appEls.push(el);
     });
-    stripEl.style.width = (apps.length * 35) + "px"; // AppLinkBarWidth = count * 35
+    /* The black strip runs from the first app's centre to the last one's, so
+       the end circles cover its edges and nothing shows past them. */
+    stripEl.style.width = (Math.max(apps.length - 1, 0) * 35) + "px";
 
     function hover(i, on) {
       appEls[i].classList.toggle("hover", on);

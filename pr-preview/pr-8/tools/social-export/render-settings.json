@@ -1,0 +1,6 @@
+{
+  "fps": 60,
+  "speed": 1.5,
+  "endHoldSeconds": 0.35,
+  "outputFolder": "snappy"
+}

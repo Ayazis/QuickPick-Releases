@@ -1,0 +1,46 @@
+/* QuickPick hex-menu demo — optional app-bar add-on styles.
+   Only needed by demos that pass `appBar` config to QuickPickHex.create(). */
+
+.qp-appbar-strip {
+  position: absolute;
+  top: 205px; /* window center +120, strip is 30 tall */
+  left: 50%; transform: translateX(-50%);
+  height: 30px;
+  background: #000;
+}
+.qp-appbar {
+  position: absolute;
+  top: 201.5px; /* buttons (37px) centered on the strip */
+  left: 50%; transform: translateX(-50%);
+  display: flex;
+}
+.qp-app {
+  position: relative;
+  width: 35px; height: 37px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qp-app .qp-app-btn {
+  position: absolute;
+  left: -1px; top: 0;
+  width: 37px; height: 37px;
+  border-radius: 50%;
+  border: 2px solid #6F6F6F;
+  background: radial-gradient(140% 140% at 50% 105%, #303030 30%, #434343 100%);
+  box-sizing: border-box;
+  transition: border-color .15s;
+}
+.qp-app.hover .qp-app-btn { border-color: #00e5ff; }
+.qp-app .qp-app-icon {
+  position: relative;
+  width: 20px; height: 20px;
+  display: block;
+  transition: filter .15s;
+}
+.qp-app.hover .qp-app-icon { filter: drop-shadow(0 0 6px rgba(255,255,255,.7)); }
+.qp-app .qp-underline {
+  position: absolute;
+  bottom: 0; left: 50%;
+  width: 16px; height: 2px;
+  margin-left: -8px;
+  background: #ADD8E6;
+}

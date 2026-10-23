@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>QuickPick — Your desktop. One shortcut.</title>
+<style>
+*{box-sizing:border-box}body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#070c13;color:#f4f8ff;font-family:'Segoe UI',sans-serif}
+.glow{position:absolute;inset:-300px;background:radial-gradient(ellipse at 60% 50%,#153f50,transparent 60%)}
+.grid{position:absolute;inset:0;opacity:.12;background-image:linear-gradient(#7694a5 1px,transparent 1px),linear-gradient(90deg,#7694a5 1px,transparent 1px);background-size:90px 90px;mask-image:linear-gradient(transparent,#000,transparent)}
+.brand{position:absolute;top:145px;left:80px;font-weight:750;color:#4ee4dd;font-size:39px;letter-spacing:-1px}.platform{position:absolute;right:160px;top:159px;font-size:23px;letter-spacing:2px;color:#a4bdcd}
+.head{position:absolute;top:265px;left:80px;width:830px;z-index:3}.eyebrow{font-size:25px;letter-spacing:5px;color:#50e0da;font-weight:700;margin-bottom:24px}h1{font-size:115px;line-height:.96;letter-spacing:-6px;margin:0;text-transform:uppercase;font-weight:850}.sub{font-size:32px;line-height:1.25;color:#b7cad9;margin-top:25px}
+.visual{position:absolute;left:40px;top:685px;width:940px;height:916px;transform-origin:50% 50%;border:2px solid #436d7e;border-radius:26px;overflow:hidden;box-shadow:0 35px 100px #000b,0 0 45px #41dbd51a}.visual img{display:block;width:100%;height:100%;object-fit:cover}
+.tag{position:absolute;top:22px;left:22px;padding:12px 19px;border-radius:9px;font-size:24px;font-weight:700;background:#0c1c2be8;color:#e0faff;border:1px solid #4c7c87;opacity:0}
+.rail{position:absolute;top:1660px;left:80px;right:160px;display:flex;gap:14px}.rail span{height:5px;flex:1;background:#253747}.rail span.on{background:#50e0da}
+.disclaimer{position:absolute;top:1695px;left:80px;color:#859caf;font-size:19px}
+.slash{position:absolute;inset:0;background:linear-gradient(110deg,transparent 36%,#50e0da30 48%,transparent 60%);pointer-events:none;opacity:0}
+.end{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 40%,#163a48,#070c13 75%);padding:410px 80px;opacity:0}
+.end .logo{font-size:62px;color:#50e0da;font-weight:800;letter-spacing:-2px}.end h2{font-size:126px;line-height:.96;letter-spacing:-6px;margin:60px 0 40px}.end p{font-size:34px;line-height:1.4;color:#b8cddc;max-width:790px}.end .button{display:inline-block;background:#50e0da;color:#082029;font-weight:750;font-size:34px;padding:25px 35px;border-radius:13px;margin-top:40px}.end .url{font-size:38px;margin-top:40px;letter-spacing:1px}
+.end{z-index:10;pointer-events:none}
+</style>
+<div class="glow"></div><div class="grid"></div><div class="brand">⬡ QuickPick</div><div class="platform">WINDOWS 11</div>
+<div class="head"><div class="eyebrow"></div><h1></h1><div class="sub"></div></div>
+<div class="visual"><img alt="QuickPick demonstration"><div class="tag"></div></div><div class="slash"></div>
+<div class="rail"><span></span><span></span><span></span></div><div class="disclaimer">Illustrated demo · Interface may vary</div>
+<div class="end"><div class="logo">⬡ QuickPick</div><h2>Put it at<br>your cursor.</h2><p>Apps. Controls. Your shortcuts.<br>Ready when you are.</p><div class="button">Get QuickPick for Windows 11 ↗</div><div class="url">quick-pick.app</div></div>
+<script>
+const clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>1-(1-clamp(x))**3;
+const chapters=[
+{at:0,eyebrow:'MEET QUICKPICK',title:'Your desktop.<br>One shortcut.',sub:'Windows apps + controls at your cursor.'},
+{at:1.5,eyebrow:'01 / SYSTEM CONTROLS',title:'Control it.',sub:'Volume. Brightness. Playback.'},
+{at:4,eyebrow:'02 / APP SWITCHING',title:'See it.<br>Switch to it.',sub:'Preview the window. Make your move.'},
+{at:7,eyebrow:'03 / PER-APP MENUS',title:'Same hotkey.<br>New moves.',sub:'A different set of actions for each app.'}
+];
+window.renderMontage=async(t,src)=>{
+ const c=chapters.filter(c=>c.at<=t).at(-1),phase=t-c.at,pop=ease(phase/.16);
+ document.querySelector('.eyebrow').textContent=c.eyebrow;
+ document.querySelector('h1').innerHTML=c.title;
+ document.querySelector('h1').style.fontSize=c.at===1.5?'115px':'90px';
+ document.querySelector('.sub').textContent=c.sub;
+ document.querySelector('.head').style.transform=`translateX(${(1-pop)*-55}px)`;
+ document.querySelector('.head').style.opacity=.5+.5*pop;
+ const img=document.querySelector('img');if(src&&img.src!==src){img.src=src;await img.decode()}
+ document.querySelector('.visual').style.transform=`translateY(${(1-pop)*65}px) rotate(${(1-pop)*-2}deg) scale(${.94+.06*pop})`;
+ document.querySelector('.visual').style.borderColor=t>=7?'#b19afa':t>=4?'#68bfff':'#50e0da';
+ const tag=document.querySelector('.tag');tag.style.opacity=t>=7&&t<10?1:0;tag.textContent=t<8.2?'BROWSER ACTIONS':'EDITOR ACTIONS';
+ document.querySelector('.glow').style.transform=`translateX(${Math.sin(t)*65}px)`;
+ document.querySelector('.slash').style.opacity=(1-clamp(phase/.18))*.7;
+ document.querySelectorAll('.rail span').forEach((el,i)=>el.classList.toggle('on',t>=[1.5,4,7][i]));
+ const closing=ease((t-10)/.16);document.querySelector('.end').style.opacity=closing;
+ document.querySelector('.end').style.transform=`translateY(${(1-closing)*45}px)`;
+};
+</script></html>

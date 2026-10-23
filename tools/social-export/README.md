@@ -2,6 +2,14 @@
 
 ## Social story pilot
 
+Latest guided review: `node render-guided.mjs` produces `out/social-guided-v7/`, a 35-second portrait ad at 60 fps with an opening explanation, volume and brightness, two complete app switches (Chrome → Photoshop → Chrome), and a final Chrome → Photoshop switch followed by app-specific menus. The last section includes stable action lists and cursor-hover tooltips. `--preview` renders representative stills and runs the storyboard checks without encoding. The new scenes reuse the website's artwork with timestamp-driven motion; regenerate those derived assets with `node build-guided-source.mjs` after changing the website artwork. See `social-guided-notes.md` for the timeline.
+
+Latest pacing review: `node render-montage.mjs --readable` produces `out/social-readable-v6/`. Volume/brightness stays unchanged; app switching and per-app menus each get five seconds at the original website pace. Total: 22 seconds. It uses fresh 60 fps masters in `out/readable/`, not slowed-down encoded footage. Generate those in PowerShell with `$env:QP_RENDER_SPEED='1'; $env:QP_RENDER_FOLDER='readable'`, then `node export.mjs switching` and `node export.mjs context`. Remove those two environment overrides afterwards to restore default exports.
+
+Latest review with brightness: `node render-montage.mjs --brightness` produces `out/social-brightness-v5/`. The branded alternating edit now shows the complete volume and brightness interaction (screen dims, then returns to normal). It adds one second to the controls demonstration, for an 18-second total, and keeps the persistent branding unaffected by the demo's dimming.
+
+Latest branded review: `node render-montage.mjs --branded` produces `out/social-branded-v4/`. It retains the alternating 17-second edit and adds a fixed background plus the actual QuickPick logo, name, website, and Free / Open source badges throughout. The logo is copied into `quickpick-logo.svg` so rendering is self-contained. The Open source badge is requested launch messaging: on 2026-10-23 the source repository was still private; do not treat this draft as confirmation of a public open-source release.
+
 Latest review: `node render-montage.mjs --alternating` produces `out/social-alternating-v3/`. It alternates static full-screen text cards and clean demonstration footage, with no marketing text over the action. The 17-second edit gives each message its own reading time; the animations retain the native speed of the 60 fps masters.
 
 The revised multi-feature ad is generated with `node render-montage.mjs` and saved in `out/social-montage-v2/`. It cuts three feature beats from the existing `out/snappy/` masters at their native 60 fps, adds animated copy and an original rhythmic soundtrack, and includes a silent export. See `social-montage-post.md` for the matching copy and edit notes.

@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 const settings = JSON.parse(await readFile(path.join(here,'render-settings.json'),'utf8'));
+if(process.env.QP_RENDER_SPEED)settings.speed=Number(process.env.QP_RENDER_SPEED);
+if(process.env.QP_RENDER_FOLDER)settings.outputFolder=process.env.QP_RENDER_FOLDER;
 const {fps, speed, endHoldSeconds} = settings;
 if (![30,60].includes(fps) || !Number.isFinite(speed) || speed <= 0 || speed > 3 || !Number.isFinite(endHoldSeconds) || endHoldSeconds < 0) throw new Error('Invalid render settings');
 const out = path.join(here, 'out', settings.outputFolder);

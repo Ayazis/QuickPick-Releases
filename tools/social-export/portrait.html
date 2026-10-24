@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>QuickPick portrait studio</title>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; width:1080px; height:1920px; overflow:hidden; background:#080c13; color:#f4f7fc; font-family:'Segoe UI',sans-serif; }
+body::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 80% 40%,#123443,transparent 65%); }
+main { position:relative; padding:160px 90px 220px; height:100%; }
+.brand { font-size:38px; font-weight:700; letter-spacing:2px; color:#46d7e4; }
+.eyebrow { margin-top:90px; font-size:25px; letter-spacing:5px; color:#98a9bd; text-transform:uppercase; }
+h1 { font-size:80px; line-height:1.08; letter-spacing:-3px; margin:28px 0; min-height:180px; }
+.description { font-size:34px; line-height:1.4; color:#bac8d9; min-height:100px; margin:0; }
+.screen { margin-top:50px; width:900px; height:877px; overflow:hidden; border:2px solid #2a4554; border-radius:30px; box-shadow:0 30px 100px #0009; }
+iframe { width:380px; height:370px; border:0; transform:scale(2.368421); transform-origin:top left; }
+footer { position:absolute; left:90px; right:90px; bottom:220px; display:flex; align-items:center; justify-content:space-between; font-size:28px; color:#9daec4; }
+.cta { color:#46d7e4; font-weight:600; }
+.progress { position:absolute; left:90px; bottom:180px; height:5px; background:#46d7e4; width:900px; transform-origin:left; }
+</style>
+<main>
+  <div class="brand">⬡ QuickPick</div>
+  <div class="eyebrow" id="label"></div>
+  <h1 id="title"></h1>
+  <p class="description" id="description"></p>
+  <div class="screen"><iframe title="Animated QuickPick feature demonstration"></iframe></div>
+  <footer><span>Windows 11 · At your cursor</span><span class="cta">quick-pick.app ↗</span></footer>
+  <div class="progress"></div>
+</main>
+<script>
+window.showFeature = async function(feature, index, count) {
+  document.querySelector('#label').textContent = `YOUR DESKTOP, ONE HOTKEY · ${index + 1}/${count}`;
+  document.querySelector('#title').textContent = feature.title;
+  document.querySelector('#description').textContent = feature.description;
+  document.querySelector('.progress').style.transform = `scaleX(${(index+1)/count})`;
+  const frame = document.querySelector('iframe');
+  await new Promise(resolve => { frame.onload = resolve; frame.src = '/assets/demos/' + feature.file + '?export'; });
+};
+</script>
+</html>

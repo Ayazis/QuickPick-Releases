@@ -427,6 +427,12 @@ window.QuickPickHex = (function () {
      opts: { loop: bool, reducedMotion: fn(instance) } */
   async function runSequence(instance, steps, opts) {
     opts = opts || {};
+    // Exporters explicitly start a single cycle after the composition is ready.
+    var exporting = new URLSearchParams(location.search).has("export");
+    if (exporting) {
+      window.qpExport = { ready: true, done: false };
+      await new Promise(function (resolve) { window.qpExport.start = resolve; });
+    }
     if (prefersReducedMotion() && opts.reducedMotion) {
       await opts.reducedMotion(instance);
       return;
@@ -458,7 +464,8 @@ window.QuickPickHex = (function () {
         }
         if (typeof s.sleep === "number") { await sleep(s.sleep); continue; }
       }
-    } while (opts.loop);
+    } while (opts.loop && !exporting);
+    if (exporting) window.qpExport.done = true;
   }
 
   return {

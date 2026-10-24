@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>QuickPick — Read, then watch</title>
+<style>
+*{box-sizing:border-box}body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#08111b;color:#f4f8ff;font-family:'Segoe UI',sans-serif}
+.card{position:absolute;inset:0;background:radial-gradient(ellipse at 25% 45%,#163d49,#08111b 75%);padding:0 84px;display:flex;flex-direction:column;justify-content:center}
+.brand{position:absolute;top:170px;left:84px;font-size:44px;font-weight:750;color:#50e0da;letter-spacing:-1px}.platform{position:absolute;top:183px;right:150px;color:#a7bdcc;font-size:24px}
+.label{font-size:25px;letter-spacing:4px;color:#50e0da;font-weight:650;margin-bottom:35px}h1{font-size:108px;line-height:1.05;letter-spacing:-5px;margin:0;max-width:830px;font-weight:800}.foot{position:absolute;bottom:240px;left:84px;font-size:20px;color:#8aa3b5}
+.cta{margin-top:55px;font-size:36px;color:#50e0da;line-height:1.6}
+.demo{position:absolute;inset:0;display:none;overflow:hidden;background:#080e18}.back{position:absolute;inset:-100px;width:1280px;height:2120px;object-fit:cover;filter:blur(65px) brightness(.3);opacity:.6}.front{position:absolute;left:0;top:430px;width:1080px;height:1053px;object-fit:contain;box-shadow:0 0 120px #0008}
+</style>
+<div class="card"><div class="brand">⬡ QuickPick</div><div class="platform">WINDOWS 11</div><div class="label"></div><h1></h1><div class="cta"></div><div class="foot">Illustrated demos · Interface may vary</div></div>
+<div class="demo"><img class="back" alt=""><img class="front" alt="QuickPick feature demonstration"></div>
+<script>
+window.renderAlternating=async(t,src)=>{
+ const action=(t>=2&&t<5)||(t>=6.5&&t<9.5)||(t>=11.5&&t<14.5);
+ document.querySelector('.demo').style.display=action?'block':'none';
+ document.querySelector('.card').style.display=action?'none':'flex';
+ const card=t<5?{label:'SYSTEM CONTROLS',title:'Your controls.<br>At your cursor.'}:t<9.5?{label:'APP SWITCHING',title:'Preview.<br>Switch.'}:t<14.5?{label:'PER-APP MENUS',title:'A different menu.<br>For each app.'}:{label:'QUICKPICK FOR WINDOWS 11',title:'Your desktop.<br>One shortcut.'};
+ document.querySelector('.label').textContent=card.label;
+ document.querySelector('h1').innerHTML=card.title;
+ document.querySelector('h1').style.fontSize=t>=9.5&&t<14.5?'94px':'108px';
+ document.querySelector('.cta').innerHTML=t>=14.5?'Get QuickPick ↗<br><span style="color:#eef7ff">quick-pick.app</span>':'';
+ if(action)await Promise.all([...document.querySelectorAll('img')].map(async img=>{if(img.src!==src){img.src=src;await img.decode()}}));
+};
+</script></html>

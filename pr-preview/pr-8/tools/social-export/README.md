@@ -2,7 +2,11 @@
 
 ## Social story pilot
 
-Latest groove review: `node render-guided.mjs` now produces `out/social-groove-v10/`, 27 seconds at 60 fps. Photoshop highlights Brush, Pen and Duplicate layer. The bottom Windows 11 / illustrated-demo footer is removed. A new original stereo mellow-funk soundtrack adds syncopated bass, soft electric-piano chords, swung hats and a light snare/rim on beats 2 and 4. Major transitions, all six tooltip arrivals, and the app-switch click align with those backbeats at 120 BPM. `mellow-funk.wav` is also saved with the exports. See `social-groove-notes.md` for timing and validation.
+Latest natural-cursor review: `node render-guided.mjs` produces `out/social-natural-v12/`. It keeps v11's exact event frames, soundtrack and 26-second length, but gives the cursor distance-based travel time with smooth acceleration and deceleration. Moves start between beats and arrive on the existing cue; controls drags take 24 frames (400 ms). `node verify-social-video.mjs` checks this version's exports. See `social-natural-notes.md`.
+
+Earlier frame-aligned review: `out/social-beatlocked-v11/` holds the 26-second version with nine-frame cursor moves. `beat-grid.js` shares the exact 120 BPM backbeat frame numbers with the soundtrack. Menu appearances, clicks and tooltip highlights hit beats 2 or 4, and volume and brightness use the same deterministic frame clock. See `social-beatlocked-notes.md` and the exported `beat-frame-map.json` for the cue frames retained in v12.
+
+Earlier groove review: `out/social-groove-v10/` holds the 27-second version introducing Pen, removal of the bottom footer and the original stereo mellow-funk soundtrack. The groove adds syncopated bass, soft electric-piano chords, swung hats and a light snare/rim on beats 2 and 4. `mellow-funk.wav` is also saved with the exports. See `social-groove-notes.md` for that version's timing.
 
 Earlier focused review: `out/social-focused-v9/` holds the 26.5-second version before the Pen and soundtrack revisions. The current renderer's `--preview` option renders representative stills and checks the storyboard without encoding, including cursor continuity, tooltip bounds, beat timing and removal of the footer. The scenes reuse the website's artwork with timestamp-driven motion; regenerate those derived assets with `node build-guided-source.mjs` after changing the website artwork. Earlier exports remain in their original output folders.
 

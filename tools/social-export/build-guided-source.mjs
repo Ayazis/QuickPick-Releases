@@ -21,5 +21,5 @@ const shared=['qp-core','qp-window','qp-desktop','qp-appbar','qp-thumbnail'];
 page+=shared.map(n=>`<link rel="stylesheet" href="../../assets/demos/${n}.css">`).join('\n');
 page+='\n<link rel="stylesheet" href="social-scene.css"><link rel="stylesheet" href="social-guided.css">\n';
 page+=['qp-icons','qp-brand-icons',...shared].map(n=>`<script src="../../assets/demos/${n}.js"></script>`).join('\n');
-page+='\n<script src="social-scene-assets.js"></script><script src="social-guided.js"></script></html>\n';
+page+='\n<script src="beat-grid.js"></script><script src="social-scene-assets.js"></script><script src="social-guided.js"></script></html>\n';
 await writeFile(new URL('social-guided.html',base),page);
